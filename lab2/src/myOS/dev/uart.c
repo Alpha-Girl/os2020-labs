@@ -19,6 +19,9 @@ void uart_put_chars(char *str){
         if(str[i] != '\n')
             outb(uart_base,str[i]);
         else
+        {
+            outb(uart_base,str[i]);
             break;
+        }
     } 
 }
