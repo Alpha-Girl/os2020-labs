@@ -5,13 +5,13 @@ extern void enable_interrupt(void);
 
 extern void outb (unsigned short int port_to, unsigned char value);
 extern unsigned char inb(unsigned short int port_from);
-unsigned short int port=0xB8000;
+int port=0xB8000;
 void clear_screen(void) {
     int i;
     disable_interrupt();
     for(i = 0; i < screen_size; i++);
     {
-        outb(port,32);
+        __asm__ __volatile__ ("movl $0x2f302f30,%l0"::"Nd" (port));
         port = port + 4;
     }	
     enable_interrupt();
@@ -24,11 +24,11 @@ void append2screen(char *str,int color){
     {
         if(str[i] != '\n')
         {
-            outb(port,str[i]);
-            port = port + 4;
+            __asm__ __volatile__ ("movl %w0,%l1"::"a"(0x2f00+str[i]),"Nd" (port));
+            port = port + 2;
         }
         else
             break;
     }
-    enable_interrupt;
+    enable_interrupt();
 }
