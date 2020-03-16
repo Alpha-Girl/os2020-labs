@@ -1,7 +1,9 @@
+#注意替换SRC_RT，其他内容不需要修改
 SRC_RT=$(shell pwd)
+#$(shell pwd)
 
 CROSS_COMPILE=
-ASM_FLAGS= -m32 --pipe -Wall -fasm -g -O1 -fno-stack-protector
+ASM_FLAGS= -m32 --pipe -Wall -fasm -g -O1 -fno-stack-protector	
 C_FLAGS =  -m32 -fno-stack-protector -g
 
 .PHONY: all
