@@ -1,4 +1,4 @@
-#需要填写一处
+# 需要填写一处
 STACK_SIZE =	0x1000	# Size of heap and stack. 4KB
 
 /* ===== code32 =========================== */
@@ -14,7 +14,7 @@ dead:	jmp dead			# Never here
 
 # Set up the stack
 establish_stack:
-	#movl	????, %eax		# eax = end of bss/start of heap #填入正确的内容
+	#movl	$_end, %eax		# eax = end of bss/start of heap #填入正确的内容
 	#addl	$STACK_SIZE, %eax	# make room for stack
 	#andl	$0xffffffc0, %eax	# align it on 16 byte boundary
 	movl	$0x80000, %eax	
