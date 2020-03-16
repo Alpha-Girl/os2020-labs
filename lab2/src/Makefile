@@ -4,7 +4,7 @@ SRC_RT=$(shell pwd)
 
 CROSS_COMPILE=
 ASM_FLAGS= -m32 --pipe -Wall -fasm -g -O1 -fno-stack-protector	
-C_FLAGS =  -m32 -fno-stack-protector -g
+C_FLAGS =  -m32 -fno-stack-protector -fno-pic -fno-builtin -g
 
 .PHONY: all
 all: output/myOS.elf

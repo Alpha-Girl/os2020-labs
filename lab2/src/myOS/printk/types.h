@@ -21,7 +21,7 @@
  
 #ifndef _SYS_TYPES_H
 #define _SYS_TYPES_H    1
- 
+int vsprintf(char * buf, const char * fmt, ...); 
 #include <features.h>
  
 __BEGIN_DECLS
