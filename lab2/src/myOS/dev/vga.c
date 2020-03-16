@@ -11,20 +11,21 @@ void clear_screen(void) {
     disable_interrupt();
     for(i = 0; i < screen_size; i++);
     {
-        __asm__ __volatile__ ("movl $0x2f302f30,%l0"::"Nd" (port));
+        __asm__ __volatile__ ("movl $0x2f302f30,%%eax"::"Nd" (port));
         port = port + 4;
     }	
     enable_interrupt();
 }
 
 void append2screen(char *str,int color){
-    int i;
+    int i, output;
     disable_interrupt();
     for(i = 0; ; i++)
     {
         if(str[i] != '\n')
         {
-            __asm__ __volatile__ ("movl %w0,%l1"::"a"(0x2f00+str[i]),"Nd" (port));
+            output = 0x2f002f00+str[i]+str[i+1]*16*16*16*16;
+            __asm__ __volatile__ ("movl %%eax,%%ebx"::"a" (output),"Nd"(port));
             port = port + 2;
         }
         else
