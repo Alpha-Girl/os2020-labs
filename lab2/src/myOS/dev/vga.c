@@ -27,14 +27,16 @@ static inline void cpu_cli(void) {
 	return;
 
 }
-
+#define vga_base 0xB8000
 unsigned short int *port;
-unsigned int p=0xB8000;
+unsigned int p;
 void clear_screen(void) {
     int i;
     int a;
     a=25*80;
-    port=p;/*
+    port=vga_base;
+    p=vga_base;
+    /*
     *port=0x2f302f30;
     p=p+4;
     port=p;
@@ -45,11 +47,13 @@ void clear_screen(void) {
         *port = 0x0020;
         p=p+2;
         port=p;
-    }	
+    }
+    p=vga_base;	
 }
 
 void append2screen(char *str,int color){
-    int i, output;
+    int i;
+    unsigned short int output;
     //disable_interrupt();
     for(i = 0; ; i++)
     {
@@ -61,7 +65,10 @@ void append2screen(char *str,int color){
             port=p;
         }
         else
+        {
             break;
+        }
+            
     }
     //enable_interrupt();
 }
