@@ -5,14 +5,16 @@ extern void uart_put_chars(char *str);
 int vsprintf(char * buf, const char * fmt, va_list args);
 char kBuf[400];  //TODO: fix me
 int myPrintk(int color,const char *format, ...){
-    vsprintf(kBuf,format,0);
+	va_list ls;
+    vsprintf(kBuf,format,ls);
     uart_put_chars(kBuf);
     return 0;
 }
 
 char uBuf[400];  //TODO: fix me
 int myPrintf(int color,const char *format, ...){
-    vsprintf(uBuf,format,0);
+	va_list ls;
+    vsprintf(uBuf,format,ls);
     append2screen(uBuf,color);
     return 0;
 }
