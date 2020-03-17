@@ -42,7 +42,7 @@ void clear_screen(void) {
     for(i = 0; i < a; i++)
     {
         
-        *port = 0x00200020;
+        *port = 0x0020;
         p=p+2;
         port=p;
     }	
@@ -55,9 +55,10 @@ void append2screen(char *str,int color){
     {
         if(str[i] != '\n')
         {
-            output = 0x2f002f00+str[i]+str[i+1]*16*16*16*16;
-            __asm__ __volatile__ ("movl %%eax,%%ebx"::"a" (output),"Nd"(port));
-            port = port + 2;
+            output = color*16*16+str[i];
+            *port = output;
+            p=p+2;
+            port=p;
         }
         else
             break;
