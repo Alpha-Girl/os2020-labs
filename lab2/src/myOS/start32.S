@@ -14,7 +14,7 @@ dead:	jmp dead			# Never here
 
 # Set up the stack
 establish_stack:
-	#movl	$_end, %eax		# eax = end of bss/start of heap #填入正确的内容
+	#movl	????, %eax		# eax = end of bss/start of heap #填入正确的内容
 	#addl	$STACK_SIZE, %eax	# make room for stack
 	#andl	$0xffffffc0, %eax	# align it on 16 byte boundary
 	movl	$0x80000, %eax	
