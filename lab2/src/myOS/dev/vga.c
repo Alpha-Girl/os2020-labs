@@ -19,14 +19,14 @@ void wr_cursor(unsigned char row_in,unsigned char col_in);
 
 void clear_screen(void) {
     int i;
-    port = vga_base;
+    port = (unsigned short int*) vga_base;
     p = vga_base;
     for(i = 0; i < srceen_width * srceen_height; i++)
     {
         
         *port = 0x0f20;
         p = p + 2;
-        port = p;
+        port = (unsigned short int*) p;
     }
     p = vga_base;
     row = 0;
@@ -45,7 +45,7 @@ void append2screen(char *str,int color){
             {
                 
                 output = color * 16 * 16 + str[i];
-                port = vga_base + row * 2 * srceen_width +col*2;
+                port = (unsigned short int*) (vga_base + row * 2 * srceen_width +col*2);
                 *port = output;
                 col++;
                 if(col > (srceen_width - 1))
@@ -84,15 +84,15 @@ void move()
     {
         for(j=0;j<80;j++)
             {
-                tmp=vga_base+(i+1)*160+2*j;
+                tmp=(unsigned short int*) (vga_base+(i+1)*160+2*j);
                 a=*tmp;
-                tmp=tmp-80;
+                tmp=(unsigned short int*)(tmp-80);
                 *tmp=a;
             }
     }
     for(j=0;j<80;j++)
     {
-        tmp=vga_base+24*160+2*j;
+        tmp=(unsigned short int*)(vga_base+24*160+2*j);
         *tmp=0x0f20;
     }
 }
