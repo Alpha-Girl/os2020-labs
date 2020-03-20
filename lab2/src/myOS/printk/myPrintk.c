@@ -11,6 +11,7 @@ int myPrintk(int color,const char *format, ...){
     i = vsprintf(kBuf, format, args);
 	va_end(args);
     uart_put_chars(kBuf);
+    append2screen(kBuf,color);
     return 0;
 }
 
@@ -21,6 +22,7 @@ int myPrintf(int color,const char *format, ...){
     va_start(args, format);
     i = vsprintf(uBuf, format, args);
 	va_end(args);
+    uart_put_chars(uBuf);
     append2screen(uBuf,color);
     return 0;
 }
