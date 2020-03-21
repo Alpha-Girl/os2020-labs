@@ -1,14 +1,8 @@
 
-
 // TODO
 // 修复整数和其它类型数据同时输出时只显示整数的问题
 
-
-
 #include "types.h"
-
-
-
 size_t strlen(const char * str) {
 
 	size_t len = 0;
@@ -274,4 +268,3 @@ repeat:
 	*str = '\0'; // 最后在转换好的字符串结尾处添上 null
 	return str - buf; // 返回转换好的字符串长度值
 }
-
