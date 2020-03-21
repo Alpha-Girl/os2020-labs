@@ -49,9 +49,10 @@ void append2screen(char *str,int color){
         {
             if(str[i] != '\n')//是否换行
             {
-                
-                output = color * 16 * 16 + str[i]; //颜色 ：前8位   ASCII码： 后8位
-                port = (unsigned short int*) (vga_base + row * 2 * srceen_width +col*2);//把指针指向 当前行列所指位置
+                output = color * 16 * 16 + str[i]; 
+                //颜色 ：前8位   ASCII码： 后8位
+                port = (unsigned short int*) (vga_base + row * 2 * srceen_width +col*2);
+                //把指针指向 当前行列所指位置
                 *port = output;//赋值
                 col++;//列移动
                 if(col > (srceen_width - 1))//判断是否需要换行
@@ -72,11 +73,11 @@ void append2screen(char *str,int color){
             break;
         }
         if(row == srceen_height)//是否需要滚屏
-            {
-                    move();
-                    row = 24;
-                    col = 0;
-            }
+        {
+            move();
+            row = 24;
+            col = 0;
+        }
         c=row*80+col;
         wr_cursor(c/256,c%256);//光标移动
     }
@@ -86,20 +87,20 @@ void move()
     int i,j;
     unsigned short int *tmp;
     unsigned short int a;
-    for(i=0;i<25;i++)//将内容向上移动一行
+    for(i = 0; i < srceen_height; i++)//将内容向上移动一行
     {
-        for(j=0;j<80;j++)
+        for(j = 0; j < srceen_width; j++)
         {
-            tmp=(unsigned short int*) (vga_base+(i+1)*160+2*j);
-            a=*tmp;
-            tmp=(unsigned short int*)(tmp-80);
-            *tmp=a;
+            tmp = (unsigned short int*) (vga_base + (i + 1) * 160 + 2 * j);//指针指向第i行第j列
+            a = *tmp;//取值
+            tmp = (unsigned short int*) (tmp - 80);//指向第（i-1）行第j列
+            *tmp = a;//赋值
         }
     }
-    for(j=0;j<80;j++)//最后一行 全部置为空格
+    for(j = 0; j < srceen_width; j++)//最后一行 全部置为空格
     {
-        tmp=(unsigned short int*)(vga_base+24*160+2*j);
-        *tmp=0x0f20;
+        tmp = (unsigned short int*) (vga_base + 24 * 160 + 2 * j);
+        *tmp = 0x0f20;
     }
 }
 
