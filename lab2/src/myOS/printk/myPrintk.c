@@ -8,10 +8,10 @@ int myPrintk(int color,const char *format, ...){
 	va_list args;
 	int i;
 	va_start(args, format);
-    i = vsprintf(kBuf, format, args);
+    i = vsprintf(kBuf, format, args);//格式化字符串format，输出到kBuf
 	va_end(args);
-    uart_put_chars(kBuf);
-    append2screen(kBuf,color);
+    uart_put_chars(kBuf);//串口输出
+    append2screen(kBuf,color);//VGA输出
     return 0;
 }
 

@@ -3,35 +3,41 @@
 extern int myPrintk(int color,const char *format, ...);
 extern void outb (unsigned short int port_to, unsigned char value);
 extern unsigned char inb(unsigned short int port_from);
-void move(void);
+
+
 #define vga_base 0xB8000
 #define srceen_width 80
 #define srceen_height 25
-unsigned short int *port,*tmp;
-unsigned int p;
-unsigned char row=0,col=0;
-unsigned char rd_row(void);
-unsigned char rd_col(void);
-void wr_row(unsigned char row_in);
-void wr_col(unsigned char col_in);
-void wr_cursor(unsigned char row_in,unsigned char col_in);
+
+// 全局变量
+unsigned short int *port;// 指向当前输出的地址
+unsigned int p;// 当前输出的地址的值
+unsigned char row=0,col=0;// 行列
+
+
+unsigned char rd_row(void);// 读取 光标所在的行（高8位）
+unsigned char rd_col(void);// 读取 光标所在的列（低8位）
+void move(void);// 滚屏：将VGA中内容向上移动一行
+void wr_row(unsigned char row_in); // 写入 光标所在的行（高8位）
+void wr_col(unsigned char col_in); // 写入 光标所在的列（低8位）
+void wr_cursor(unsigned char row_in,unsigned char col_in); // 写入 光标位置
 
 
 void clear_screen(void) {
     int i;
-    port = (unsigned short int*) vga_base;
-    p = vga_base;
-    for(i = 0; i < srceen_width * srceen_height; i++)
+    port = (unsigned short int*) vga_base; //指针指向 第0行 第0列
+    p = vga_base; //指针对应地址
+    for(i = 0; i < srceen_width * srceen_height; i++) //输出空格 实现清屏
     {
         
         *port = 0x0f20;
         p = p + 2;
         port = (unsigned short int*) p;
     }
-    p = vga_base;
-    row = 0;
+    p = vga_base; //指针对应地址 置为 0xB8000
+    row = 0; //行列置零
     col = 0;
-    //wr_cursor(row,col);	
+    wr_cursor(row,col);	//光标置零
 }
 
 void append2screen(char *str,int color){
@@ -39,16 +45,16 @@ void append2screen(char *str,int color){
     unsigned short int output;
     for(i = 0; ; i++)
     {
-        if(str[i] != '\0')
+        if(str[i] != '\0')//字符串是否结束
         {
-            if(str[i] != '\n')
+            if(str[i] != '\n')//是否换行
             {
                 
-                output = color * 16 * 16 + str[i];
-                port = (unsigned short int*) (vga_base + row * 2 * srceen_width +col*2);
-                *port = output;
-                col++;
-                if(col > (srceen_width - 1))
+                output = color * 16 * 16 + str[i]; //颜色 ：前8位   ASCII码： 后8位
+                port = (unsigned short int*) (vga_base + row * 2 * srceen_width +col*2);//把指针指向 当前行列所指位置
+                *port = output;//赋值
+                col++;//列移动
+                if(col > (srceen_width - 1))//判断是否需要换行
                 {
                     row++;
                     col = 0;
@@ -65,32 +71,32 @@ void append2screen(char *str,int color){
         {
             break;
         }
-        if(row == srceen_height)
+        if(row == srceen_height)//是否需要滚屏
             {
                     move();
                     row = 24;
                     col = 0;
             }
-        //myPrintk(0x7,"row: %d, col: %d\n",rd_row(),rd_col());
         c=row*80+col;
-        wr_cursor(c/256,c%256);
+        wr_cursor(c/256,c%256);//光标移动
     }
 }
 void move()
 {
     int i,j;
+    unsigned short int *tmp;
     unsigned short int a;
-    for(i=0;i<25;i++)
+    for(i=0;i<25;i++)//将内容向上移动一行
     {
         for(j=0;j<80;j++)
-            {
-                tmp=(unsigned short int*) (vga_base+(i+1)*160+2*j);
-                a=*tmp;
-                tmp=(unsigned short int*)(tmp-80);
-                *tmp=a;
-            }
+        {
+            tmp=(unsigned short int*) (vga_base+(i+1)*160+2*j);
+            a=*tmp;
+            tmp=(unsigned short int*)(tmp-80);
+            *tmp=a;
+        }
     }
-    for(j=0;j<80;j++)
+    for(j=0;j<80;j++)//最后一行 全部置为空格
     {
         tmp=(unsigned short int*)(vga_base+24*160+2*j);
         *tmp=0x0f20;

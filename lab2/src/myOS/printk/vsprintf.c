@@ -1,4 +1,6 @@
 
+// copy from https://github.com/MRNIU/SimpleKernel
+// 移植！
 // TODO
 // 修复整数和其它类型数据同时输出时只显示整数的问题
 
