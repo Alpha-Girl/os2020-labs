@@ -9,4 +9,4 @@ myPrintf
 功能1：进入myMain；清屏；输出myMain的标识字符串
 
 运行命令:
-qemu-system-i386 -kernel myOS.elf -serial stdio
+qemu-system-i386 -kernel myOS.elf -serial pty &
