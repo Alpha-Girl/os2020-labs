@@ -8,6 +8,7 @@ void init8253(void)
     outb(0x40,0x9c);
     outb(0x40,0x2e);
     c=inb(0x21);
-    c=c/2;
+    c = (c >> 1);
+    c = (c << 1);
     outb(0x21,c);
 }
