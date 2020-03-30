@@ -16,7 +16,7 @@ void init8253(void)
     high = ( (divisor >> 8) & 0xFF);
     outb(0x40,low);
     outb(0x40,high);
-    myPrintk(0x2,"8253");
+    myPrintk(0x2,"init8253\n");
     unsigned char mask = inb(0x21) ;
     mask= mask & 0xfe;
     outb(0x21,mask);

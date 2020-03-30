@@ -41,20 +41,20 @@ void maybeUpdateWallClock(void)
 
 void WallClock_append(int h, int m, int s){
 	unsigned short int *p;
-	p = (unsigned short int *)0xB8000 + 24 * 160 + 2 * 72;
-	*p = 0x2f00 | (unsigned short int)(h/10);
-	p = p + 2;
-	*p = 0x2f00 | (unsigned short int)(h%10);
-	p = p + 2;
-	*p = 0x2f00 | 0x3a;
-	p = p + 2;
-	*p = 0x2f00 | (unsigned short int)(m/10);
-	p = p + 2;
-	*p = 0x2f00 | (unsigned short int)(m%10);
-	p = p + 2;
-	*p = 0x2f00 | 0x3a;
-	p = p + 2;
-	*p = 0x2f00 | (unsigned short int)(s/10);
-	p = p + 2;
-	*p = 0x2f00 | (unsigned short int)(s%10);
+	p = (unsigned short int *)(0xB8000 + 24 * 160 + 2 * 72);
+	*p = 0x2f00 + 0x30 +(unsigned short int)(h/10);
+	p = p + 1;
+	*p = 0x2f00 + 0x30 +(unsigned short int)(h%10);
+	p = p + 1;
+	*p = 0x2f00 + 0x3a;
+	p = p + 1;
+	*p = 0x2f00 + 0x30+(unsigned short int)(m/10);
+	p = p + 1;
+	*p = 0x2f00 + 0x30+(unsigned short int)(m%10);
+	p = p + 1;
+	*p = 0x2f00 + 0x3a;
+	p = p + 1;
+	*p = 0x2f00 + 0x30+(unsigned short int)(s/10);
+	p = p + 1;
+	*p = 0x2f00 + 0x30+(unsigned short int)(s%10);
 }

@@ -15,5 +15,6 @@ void init8259A(void)
     outb(0xA1,0x01);
     outb(0x21,0xFF);
     outb(0xA1,0xFF);
+    myPrintk(0x2,"init8259A\n");
     enable_interrupt();
 }
