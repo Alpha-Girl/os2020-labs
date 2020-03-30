@@ -3,7 +3,7 @@
 
 
 
-#include "types.h"
+#include "../printk/types.h"
 
 // 获取字符串长度
 size_t strlen(const char * str) {
