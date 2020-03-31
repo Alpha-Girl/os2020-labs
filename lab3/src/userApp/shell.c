@@ -1,7 +1,7 @@
 // NOTE: 以下框架仅供参考。可以推翻重写。
 #define NULL 0
 #define FLAG_EXT 0x00  // Normal function keys
-#define num_of_cmds 3
+#define num_of_cmds 2
 // Special keys
 #define ESC  (0x01 & FLAG_EXT) // Esc
 #define TAB  (0x02 & FLAG_EXT) // Tab
@@ -31,7 +31,6 @@ struct command {
 } cmds[num_of_cmds] = {
 	{"cmd", cmd_handler, NULL, "list all commands"},
 	{"help", help_handler, help_help, "help [cmd]"},
-	{"", NULL, NULL, ""}
 };
 
 
@@ -67,7 +66,7 @@ int cmd_handler(int argc, char *argv[])
 	myPrintk(0x7,"My shell, version 1.0.0\n");
 	myPrintk(0x7,"These shell commands are defined. Type 'cmd' to see this list.\n");
 	myPrintk(0x7,"command name: description");
-	for(i=0;i<num_of_cmds-1;i++){
+	for(i=0;i<num_of_cmds;i++){
 		myPrintk(0x7,"\n");
 		myPrintk(0x7,cmds[i].cmd);
 		myPrintk(0x7," : ");
@@ -146,6 +145,12 @@ void arg(char *str){
 		}
 		else if(str[i]==34){
    			flag_qm = ! flag_qm;
+			if(flag_qm==1){
+				p_argv[++n_argc]=&str[i+1];
+			}
+			else if(flag_qm==0){
+				str[i]=='\0';
+			}
 		}
 
 		else if(str[i]==' '){
