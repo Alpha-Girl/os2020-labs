@@ -82,6 +82,21 @@ void append2screen(char *str,int color){
         wr_cursor(c/256,c%256);//光标移动
     }
 }
+void append2srceen_info(char *str,int color){
+    int i=0;
+    for(i=0;;i++){
+        if(str[i]!='\0'){
+            port = (unsigned short int*) (vga_base + 24 * 2 * srceen_width +i*2);
+            *port = color * 16 * 16 + str[i]; 
+        }
+        else 
+            break;
+    }
+    for(;i<72;i++){
+        port = (unsigned short int*) (vga_base + 24 * 2 * srceen_width +i*2);
+        *port = 0x0f20; 
+    }
+}
 void clear_char(void){
     int c;
     if(col==0){

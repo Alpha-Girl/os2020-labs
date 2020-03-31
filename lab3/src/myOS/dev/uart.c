@@ -19,9 +19,16 @@ void uart_put_chars(char *str){
     int i = 0;
     for(i = 0; ; i++)
     {
-        if(str[i] != '\0')
+        if(str[i] != '\0' && str[i]!= '\n')
             outb(uart_base,str[i]);
-        else       
+        else if(str[i]=='\n')
+            {
+                outb(uart_base,'\n');
+                outb(uart_base,'\r');
+            }
+            
+        else
+              
             break;
     } 
 }
