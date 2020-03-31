@@ -72,22 +72,38 @@ void append2screen(char *str,int color){
         {
             break;
         }
-        if(row == srceen_height)//是否需要滚屏
+        if(row == srceen_height-1)//是否需要滚屏
         {
             move();
-            row = 24;
+            row = 23;
             col = 0;
         }
         c=row*80+col;
         wr_cursor(c/256,c%256);//光标移动
     }
 }
+void clear_char(void){
+    int c;
+    if(col==0){
+        col=79;
+        row--;
+    }
+    else
+    {
+        col--;
+    }
+    port =(unsigned short int*) (vga_base + row * 2 * srceen_width +col*2);
+    *port=0x0f20;
+    c=row*80+col;
+        wr_cursor(c/256,c%256);//光标移动
+    
+}
 void move()
 {
     int i,j;
     unsigned short int *tmp;
     unsigned short int a;
-    for(i = 0; i < srceen_height; i++)//将内容向上移动一行
+    for(i = 0; i < srceen_height-1; i++)//将内容向上移动一行
     {
         for(j = 0; j < srceen_width; j++)
         {
@@ -99,7 +115,7 @@ void move()
     }
     for(j = 0; j < srceen_width; j++)//最后一行 全部置为空格
     {
-        tmp = (unsigned short int*) (vga_base + 24 * 160 + 2 * j);
+        tmp = (unsigned short int*) (vga_base + 23 * 160 + 2 * j);
         *tmp = 0x0f20;
     }
 }
