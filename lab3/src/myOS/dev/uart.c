@@ -29,9 +29,7 @@ void uart_put_chars(char *str)
             outb(uart_base, '\n');
             outb(uart_base, '\r');
         }
-
         else
-
             break;
     }
 }
