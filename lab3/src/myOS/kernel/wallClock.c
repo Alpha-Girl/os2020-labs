@@ -1,4 +1,3 @@
-#include "time.h"
 int hh=0, mm=0, ss=0, ms=0;
 void WallClock_append(int h, int m, int s);
 void setWallClock(int h, int m, int s)
@@ -6,13 +5,6 @@ void setWallClock(int h, int m, int s)
 	hh = h;
 	mm = m;
 	ss = s;
-	/*time_t timep;
-	struct tm *p;
-	time (&timep);
-	p=gmtime(&timep);
-	ss=p->tm_sec; /*获取当前秒
-	mm=p->tm_min; /*获取当前分
-	hh=(8+p->tm_hour)%24;/*获取当前时,这里获取西方的时间,刚好相差八个小时*/
 	WallClock_append(hh,mm,ss);
 }
 

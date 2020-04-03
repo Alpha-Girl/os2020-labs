@@ -1,4 +1,4 @@
-extern void outb (unsigned short int port_to, unsigned char value);
+#include "../i386/io.h"
 void enable_interrupt(void);
 void disable_interrupt(void);
 extern int myPrintk(int color,const char *format, ...);

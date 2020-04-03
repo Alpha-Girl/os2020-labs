@@ -1,5 +1,5 @@
 int n_tick = 0;
-void maybeUpdateWallClock(void);
+extern void maybeUpdateWallClock(void);
 extern int myPrintk(int color,const char *format, ...);
 void tick(void)
 {

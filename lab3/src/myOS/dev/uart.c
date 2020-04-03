@@ -1,6 +1,5 @@
 //调用inb和outb函数，实现下面的uart的三个函数
-extern unsigned char inb(unsigned short int port_from);
-extern void outb (unsigned short int port_to, unsigned char value);
+#include "../i386/io.h"
 
 #define uart_base 0x3F8
 // 实现串口输出 单个字符
