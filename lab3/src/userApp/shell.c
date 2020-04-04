@@ -49,6 +49,8 @@ int help_handler(int argc, char *argv[])
 			break;
 		}
 	}
+	//该指令不在cmd中，或未输入cmd
+	//打印错误信息
 	if (i == num_of_cmds)
 	{
 		myPrintk(0x4, "The cmd is not defined. Type 'cmd' to see the command list.\n");
@@ -78,7 +80,7 @@ void startShell(void)
 {
 	unsigned char c[2];
 	int (*f)(int argc, char **argv);
-	int i = 0, j, k, l;
+	int i = 0, j;
 	c[1] = '\0';
 	myPrintk(0x2, "YixiangHu@Desktop:");
 	c[0] = uart_get_char();
@@ -111,12 +113,17 @@ void startShell(void)
 			i = 0;
 			sBuf[i++] = c[0];
 		}
-		else if (c[0] == 0x8)
+		else if (c[0] == 127)
 		{
-			if (i > 0)
+			if (i > 1)
 			{
-				i--;
 				clear_char();
+			}
+			if(i==1){
+				i=0;
+			}
+			else{
+				i=i-2;
 			}
 			c[0] = uart_get_char();
 			sBuf[i++] = c[0];
