@@ -10,6 +10,7 @@ void setWallClock(int h, int m, int s)
 	hh = h;
 	mm = m;
 	ss = s;
+	//显示时间
 	WallClock_append(hh, mm, ss);
 }
 
@@ -20,15 +21,16 @@ void getWallClock(int *h, int *m, int *s)
 	*m = mm;
 	*s = ss;
 }
-int no_funcs_in_Hook = 0;
-funcs func_array[MAX_NUM];
+
+int No_funcs_in_Hook = 0;  //当前hook函数数量
+funcs func_array[MAX_NUM]; //hook函数指针数组
 //设置WallClockHook
 void setWallClockHook(void (*func)(void))
 {
-	if (no_funcs_in_Hook < MAX_NUM - 1)
+	if (No_funcs_in_Hook < MAX_NUM - 1) //hook函数指针数组未满
 	{
-		func_array[no_funcs_in_Hook] = func;
-		no_funcs_in_Hook++;
+		func_array[No_funcs_in_Hook] = func;
+		No_funcs_in_Hook++;
 		myPrintk(0x2, "SetWallClockHook succeed.\n");
 	}
 	else
@@ -41,10 +43,11 @@ void setWallClockHook(void (*func)(void))
 void maybeUpdateWallClock(void)
 {
 	int i = 0;
-	for (i = 0; i < no_funcs_in_Hook; i++)
+	for (i = 0; i < No_funcs_in_Hook; i++) //调用hook函数指针数组中的函数
 	{
 		func_array[i]();
 	}
+	//设置刷新时间
 	if (ss < 59)
 	{
 		ss++;
@@ -63,8 +66,10 @@ void maybeUpdateWallClock(void)
 	{
 		hh = mm = ss = 0;
 	}
+	//屏幕显示时间刷新
 	WallClock_append(hh, mm, ss);
 }
+
 //将时间显示在屏幕右下角
 void WallClock_append(int h, int m, int s)
 {
