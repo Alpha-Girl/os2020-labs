@@ -1,7 +1,8 @@
 // NOTE: 以下框架仅供参考。可以推翻重写。
 #define NULL 0
 #define num_of_cmds 2
-
+#define ENTER 0xd
+#define BACKSPACE 127
 // 命令处理函数
 #include "../myOS/lib/string.h"
 #include "../myOS/dev/uart_vga.h"
@@ -88,7 +89,7 @@ void startShell(void)
 	for (;;)
 	{
 		//回车
-		if (c[0] == 0xd)
+		if (c[0] == ENTER)
 		{
 			myPrintk(0x7, "\n");
 			sBuf[--i] = '\0';
@@ -121,7 +122,7 @@ void startShell(void)
 			sBuf[i++] = c[0];
 		}
 		//退格（BackSpace）处理
-		else if (c[0] == 127)
+		else if (c[0] == BACKSPACE)
 		{
 			if (i > 1)
 			{
