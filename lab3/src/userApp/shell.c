@@ -87,18 +87,23 @@ void startShell(void)
 	sBuf[i++] = c[0];
 	for (;;)
 	{
+		//回车
 		if (c[0] == 0xd)
 		{
 			myPrintk(0x7, "\n");
 			sBuf[--i] = '\0';
-			arg(sBuf);
+			arg(sBuf); //对字符串进行处理，并将p_argv指向对应位置
 			for (j = 0; j < num_of_cmds; j++)
 			{
+				//与cmds[]逐一比较，判断该指令是否在命令列表
 				if (strcmp(p_argv[0], cmds[j].cmd) == 0)
 				{
+					//若在命令列表
+					//输出 命令描述
 					myPrintk(0x7, "USAGE: ");
 					myPrintk(0x7, cmds[j].desc);
 					myPrintk(0x7, "\n");
+					//调用 命令处理函数
 					f = cmds[j].func;
 					f(n_argc, p_argv);
 					break;
@@ -106,24 +111,29 @@ void startShell(void)
 			}
 			if (j == num_of_cmds)
 			{
+				//输出错误信息
 				myPrintk(0x7, "Unknown command.\n");
 			}
+			//等待 下一条指令的输入
 			myPrintk(0x2, "YixiangHu@Desktop:");
 			c[0] = uart_get_char();
 			i = 0;
 			sBuf[i++] = c[0];
 		}
+		//退格（BackSpace）处理
 		else if (c[0] == 127)
 		{
 			if (i > 1)
 			{
 				clear_char();
 			}
-			if(i==1){
-				i=0;
+			if (i == 1)
+			{
+				i = 0;
 			}
-			else{
-				i=i-2;
+			else
+			{
+				i = i - 2;
 			}
 			c[0] = uart_get_char();
 			sBuf[i++] = c[0];
@@ -144,17 +154,21 @@ void startShell(void)
 void arg(char *str)
 {
 	int i = 0, k = 0, flag_space = 0, flag_qm = 0;
+	//flag_space = 1表示 上一字符为空格
+	//flag_qm =1 表示 当前字符属于 引号内部内容
 	n_argc = 0;
 	p_argv[0] = &str[0];
 	for (;; i++)
 	{
 		if (str[i] == '\0')
 		{
+			//处理结束，退出循环
 			break;
 		}
 		else if (str[i] == 34)
 		{
-			flag_qm = !flag_qm;
+			//引号（quotation marks）处理
+			flag_qm = !flag_qm; //flag翻转
 			if (flag_qm == 1)
 			{
 				p_argv[++n_argc] = &str[i + 1];
