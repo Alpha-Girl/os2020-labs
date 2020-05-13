@@ -1,200 +1,147 @@
-// NOTE: 以下框架仅供参考。可以推翻重写。
-#define NULL 0
-#define num_of_cmds 2
-#define ENTER 0xd
-#define BACKSPACE 127
-// 命令处理函数
-#include "../myOS/lib/string.h"
-#include "../myOS/dev/uart_vga.h"
-extern int myPrintk(int color, const char *format, ...);
-int cmd_handler(int, char **);
-int help_handler(int, char **);
-void arg(char *str);
-void help_help(void);
+//shell.c --- malloc version
+#include "../myOS/userInterface.h"
 
-unsigned char sBuf[400];
-int n_argc;
-char *p_argv[20];
+#define NULL (void*)0
 
-struct command
-{
-	char *cmd;
-	int (*func)(int argc, char **argv);
-	void (*help_func)(void);
-	char *desc;
-} cmds[num_of_cmds] = {
-	{"cmd", cmd_handler, NULL, "list all commands"},
-	{"help", help_handler, help_help, "help [cmd]"},
+int getCmdline(unsigned char *buf, int limit){
+    unsigned char *ptr = buf;
+    int n = 0;
+    while (n < limit) {
+        *ptr = uart_get_char();        
+        if (*ptr == 0xd) {
+            *ptr++ = '\n';
+            *ptr = '\0';
+            uart_put_char('\r');
+            uart_put_char('\n');
+            return n+2;
+        }
+        uart_put_char(*ptr);
+        ptr++;
+        n++;
+    }     
+    
+    return n;
+}
+
+struct cmd {
+    unsigned char cmd[20+1]; //TODO: dynamic
+    int (*func)(int argc, unsigned char **argv);
+    void (*help_func)(void);
+    unsigned char description[100+1]; //TODO: dynamic?   
+    struct cmd * nextCmd;
 };
 
-// help 的帮助
-void help_help(void)
-{
-	myPrintk(0x7, "Type `help name' to find out more about the function `name'.\n");
+struct cmd *ourCmds = NULL;
+
+int listCmds(int argc, unsigned char **argv){
+    struct cmd *tmpCmd = ourCmds;
+    myPrintf(0x7, "list all registered commands:\n");
+    myPrintf(0x7, "command name: description\n");
+
+    while (tmpCmd != NULL) {
+        myPrintf(0x7,"% 12s: %s\n",tmpCmd->cmd, tmpCmd->description);
+        tmpCmd = tmpCmd->nextCmd;
+    }
+    return 0;
 }
 
-// help 命令处理函数
-int help_handler(int argc, char *argv[])
-{
-	int i;
-	void (*f)(void);
-	for (i = 0; i < num_of_cmds; i++)
-	{
-		//若help [cmd]对应的cmd在cmds[]中
-		//调用该指令对应的 help_func
-		if (strcmp(argv[1], cmds[i].cmd) == 0)
-		{
-			f = cmds[i].help_func;
-			if (f != NULL)
-				f();
-			break;
-		}
-	}
-	//该指令不在cmd中，或未输入cmd
-	//打印错误信息
-	if (i == num_of_cmds)
-	{
-		myPrintk(0x4, "The cmd is not defined. Type 'cmd' to see the command list.\n");
-	}
-	return 0;
+void addNewCmd(	unsigned char *cmd, 
+		int (*func)(int argc, unsigned char **argv), 
+		void (*help_func)(void), 
+		unsigned char* description){
+	//本函数需要实现！！！
+    /*增加命令
+    使用malloc创建一个cm的结构体，新增命令。
+    */
+
+
 }
 
-// cmd 命令处理函数
-int cmd_handler(int argc, char *argv[])
-{
-	int i = 0;
-	myPrintk(0x7, "My shell, version 1.0.0\n");
-	myPrintk(0x7, "These shell commands are defined. Type 'cmd' to see this list.\n");
-	myPrintk(0x7, "command name: description\n");
-	//按 命令：命令描述 格式输出所有指令
-	for (i = 0; i < num_of_cmds; i++)
-	{
-		myPrintk(0x7, cmds[i].cmd);
-		myPrintk(0x7, " : ");
-		myPrintk(0x7, cmds[i].desc);
-		myPrintk(0x7, "\n");
-	}
-	return 0;
+void help_help(void){
+    myPrintf(0x7,"USAGE: help [cmd]\n\n");
 }
 
-void startShell(void)
-{
-	unsigned char c[2];
-	int (*f)(int argc, char **argv);
-	int i = 0, j;
-	c[1] = '\0';
-	myPrintk(0x2, "YixiangHu@Desktop:");
-	c[0] = uart_get_char();
-	sBuf[i++] = c[0];
-	for (;;)
-	{
-		//回车
-		if (c[0] == ENTER)
-		{
-			myPrintk(0x7, "\n");
-			sBuf[--i] = '\0';
-			arg(sBuf); //对字符串进行处理，并将p_argv指向对应位置
-			for (j = 0; j < num_of_cmds; j++)
-			{
-				//与cmds[]逐一比较，判断该指令是否在命令列表
-				if (strcmp(p_argv[0], cmds[j].cmd) == 0)
-				{
-					//若在命令列表
-					//输出 命令描述
-					myPrintk(0x7, "USAGE: ");
-					myPrintk(0x7, cmds[j].desc);
-					myPrintk(0x7, "\n");
-					//调用 命令处理函数
-					f = cmds[j].func;
-					f(n_argc, p_argv);
-					break;
-				}
-			}
-			if (j == num_of_cmds)
-			{
-				//输出错误信息
-				myPrintk(0x7, "Unknown command.\n");
-			}
-			//等待 下一条指令的输入
-			myPrintk(0x2, "YixiangHu@Desktop:");
-			c[0] = uart_get_char();
-			i = 0;
-			sBuf[i++] = c[0];
-		}
-		//退格（BackSpace）处理
-		else if (c[0] == BACKSPACE)
-		{
-			if (i > 1)
-			{
-				clear_char();
-			}
-			if (i == 1)
-			{
-				i = 0;
-			}
-			else
-			{
-				i = i - 2;
-			}
-			c[0] = uart_get_char();
-			sBuf[i++] = c[0];
-		}
-		else
-		{
-			myPrintk(0x7, c);
-			c[0] = uart_get_char();
-			sBuf[i++] = c[0];
-		}
-	}
+int help(int argc, unsigned char **argv){
+    int i;
+    struct cmd *tmpCmd = ourCmds;
+    help_help();
+
+    if (argc==1) return listCmds(argc,argv);
+    if (argc>2) return 1;
+    
+    while (tmpCmd != NULL) {            
+        if (strcmp(argv[1],tmpCmd->cmd)==0) {
+            if (tmpCmd->help_func!=NULL)
+                tmpCmd->help_func();
+            else myPrintf(0x7,"%s\n",tmpCmd->description);
+            break;
+        }
+        tmpCmd = tmpCmd->nextCmd;
+    }
+    return 0;
 }
 
-//arg函数功能：
-//将p_argv[]指向对应字符串起始位置
-//对字符串结尾空格进行处理
-//修改n_argc
-void arg(char *str)
-{
-	int i = 0, k = 0, flag_space = 0, flag_qm = 0;
-	//flag_space = 1表示 上一字符为空格
-	//flag_qm =1 表示 当前字符属于 引号内部内容
-	n_argc = 0;
-	p_argv[0] = &str[0];
-	for (;; i++)
-	{
-		if (str[i] == '\0')
-		{
-			//处理结束，退出循环
-			break;
-		}
-		else if (str[i] == 34)
-		{
-			//引号（quotation marks）处理
-			flag_qm = !flag_qm; //flag翻转
-			if (flag_qm == 1)
-			{
-				p_argv[++n_argc] = &str[i + 1];
-			}
-			else if (flag_qm == 0)
-			{
-				str[i] == '\0';
-			}
-		}
-		else if (str[i] == ' ')
-		{
-			if (flag_qm == 0 && flag_space == 0)
-			{
-				str[i] = '\0';
-				flag_space = 1;
-			}
-			else if (flag_qm == 0 && flag_space == 1)
-			{
-				str[i] = '\0';
-			}
-		}
-		else if (flag_space == 1 && flag_qm == 0)
-		{
-			p_argv[++n_argc] = &str[i];
-			flag_space = 0;
-		}
-	}
+struct cmd *findCmd(unsigned char *cmd){
+        struct cmd * tmpCmd = ourCmds;
+	int found = 0;
+        while (tmpCmd != NULL) {  //at lease 2 cmds            
+            if (strcmp(cmd,tmpCmd->cmd)==0){
+		    found=1;
+		    break;
+	    }
+            tmpCmd = tmpCmd->nextCmd;
+        }
+	return found?tmpCmd:NULL;
+}
+
+int split2Words(unsigned char *cmdline, unsigned char **argv, int limit){
+    unsigned char c, *ptr = cmdline;
+    int argc=0;    
+    int inAWord=0;
+
+    while ( c = *ptr ) {  // not '\0'
+        if (argc >= limit) {
+            myPrintf(0x7,"cmdline is tooooo long\n");
+            break;
+        }
+        switch (c) {
+            case ' ':  *ptr = '\0'; inAWord = 0; break; //skip white space
+            case '\n': *ptr = '\0'; inAWord = 0; break; //end of cmdline?
+            default:  //a word
+             if (!inAWord) *(argv + argc++) = ptr;
+             inAWord = 1;             
+             break;
+        }   
+        ptr++;     
+    }
+    return argc;
+}
+
+void initShell(void){
+    addNewCmd("cmd\0",listCmds,NULL,"list all registered commands\0");
+    addNewCmd("help\0",help,help_help,"help [cmd]\0");
+    //TODO: may be we can add a new command exit or quit
+}
+
+unsigned char cmdline[100];
+void startShell(void){    
+    unsigned char *argv[10];  //max 10
+    int argc;    
+    struct cmd *tmpCmd;
+    //myPrintf(0x7,"StartShell:\n");     
+    
+    while(1) {
+        myPrintf(0x3,"xlanchen >:");
+        getCmdline(&cmdline[0],100);
+        myPrintf(0x7,cmdline);
+
+        argc = split2Words(cmdline,&argv[0],10); 
+        if (argc == 0) continue;
+
+	    tmpCmd = findCmd(argv[0]);
+        if (tmpCmd)   
+	        tmpCmd->func(argc, argv);
+	    else
+            myPrintf(0x7,"UNKOWN command: %s\n",argv[0]);
+    }
 }

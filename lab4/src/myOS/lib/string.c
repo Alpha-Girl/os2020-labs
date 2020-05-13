@@ -1,83 +1,48 @@
-// string.c
-
-#include "../printk/types.h"
-
-// 获取字符串长度
-size_t strlen(const char *str)
-{
-	size_t len = 0;
-	while (str[len])
-		len++;
-	return len;
+int strLength(unsigned char *str){
+    int n=0;
+    while(*str++) n++;
+    return n;
 }
 
-// 如果 src > dest, 则返回值大于 0，如果 src = dest, 则返回值等于 0，
-// 如果 srd  < dest ,则返回值小于 0。
-int8_t strcmp(const char *src, const char *dest)
-{
-	while (*src && *dest && (*src == *dest))
-	{
-		src++;
-		dest++;
-	}
-	return *src - *dest;
+int strcpy(unsigned char *src, unsigned char *dst){
+    int n=0;
+    while(*src) {
+        *dst++ = *src++;
+        n++;
+    }
+    return n;
 }
 
-char *strcpy(char *dest, const char *src)
-{
-	char *address = dest;
-	while ((*dest++ = *src++) != '\0')
-		;
-	return address;
+int strncpy(unsigned char *src, unsigned char *dst, unsigned int n){
+    int nn=0;
+    while(*src) {
+        *dst++ = *src++;
+        nn++;
+	    if (nn >= n) break;
+    }
+    return nn;
 }
 
-void backspace(char *src)
-{
-	size_t len = strlen(src);
-	src[len - 1] = '\0';
+int strcmp(unsigned char *str1, unsigned char *str2){
+    unsigned char c1, c2;
+    do {
+        c1 = *str1++;
+        c2 = *str2++;
+        if (c1 != c2) return (c1 > c2)?1:-1;
+        if (c1 == '\0') break;
+    } while(1);
+    return 0;  //equal    
 }
 
-void append(char *src, char dest)
-{
-	size_t len = strlen(src);
-	src[len] = dest;
-	src[len + 1] = '\0';
-}
+/*
+int strncmp(unsigned char *str1, unsigned char *str2, unsigned int n){
+    unsigned char c1, c2;    
 
-char *strcat(char *dest, const char *src)
-{
-	uint8_t *add_d = (uint8_t *)dest;
-	if (dest != NULL && src != NULL)
-	{
-		while (*add_d)
-			add_d++;
-		while (*src)
-			*add_d++ = *src++;
-	}
-	// size_t len = strlen(dest);
-	// dest[len+1]='\0';
-	return dest;
-}
-
-void memcpy(void *dest, void *src, uint32_t len)
-{
-	uint8_t *sr = (uint8_t *)src;
-	uint8_t *dst = (uint8_t *)dest;
-	while (len != 0)
-	{
-		*dst++ = *sr++;
-		len--;
-	}
-}
-void memset(void *dest, uint8_t val, uint32_t len)
-{
-	for (uint8_t *dst = (uint8_t *)dest; len != 0; len--)
-	{
-		*dst++ = val;
-	}
-}
-
-void bzero(void *dest, uint32_t len)
-{
-	memset(dest, 0, len);
-}
+    while(n){
+        c1 = *str1++;
+        c2 = *str2++;        
+        if (c1 != c2) return (c1 > c2)?1:-1;
+        if (c1 == '\0') break;
+    };
+    return 0;
+}*/

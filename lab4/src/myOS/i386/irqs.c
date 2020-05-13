@@ -1,5 +1,5 @@
-#include "../dev/uart_vga.h"
+#include "../include/vga.h"
+
 void ignoreIntBody(void){
-    append2srceen_info("Unknown interrupt1\0",0x4);
-    return;
+    put_chars("Unknown interrupt1\0",0x4,24,0);
 }

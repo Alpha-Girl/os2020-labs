@@ -1,30 +1,43 @@
-//实现myPrint功能，需要调用到格式化输出的function（vsprintf）
-extern void append2screen(char *str, int color);
-extern void uart_put_chars(char *str);
-#include "types.h"
-extern int vsprintf(char *buf, const char *fmt, va_list args);
-char kBuf[400]; //TODO: fix me
-int myPrintk(int color, const char *format, ...)
-{
+#define KERNEL  //needed by vsprintf.c
+#include "types.h" //needed by vsprintf.c
+#include "vsprintf.c"
+
+#include "../include/uart.h"
+#include "../include/vga.h"
+
+//extern void getTimeStamp(unsigned char *buffer);
+//char timestamp[20];
+
+char buf[400];  //TODO: fix me
+int myPrintk(int color,const char *format, ...){
     va_list args;
-    int i;
+    int n;
+
+    //getTimeStamp(timestamp);
+    //append2screen(timestamp,color);
+    //uart_put_chars(timestamp);
+
     va_start(args, format);
-    i = vsprintf(kBuf, format, args); //格式化字符串format，输出到kBuf
-    va_end(args);
-    uart_put_chars(kBuf);       //串口输出
-    append2screen(kBuf, color); //VGA输出
-    return 0;
+    n = vsprintf(buf, format, args);
+    //if (n>400) while(1);
+    append2screen(buf,color);
+    uart_put_chars(buf); 
+    va_end(args);  
+
+    return n; 
 }
 
-char uBuf[400]; //TODO: fix me
-int myPrintf(int color, const char *format, ...)
-{
+char user_buf[400];  //TODO: fix me
+int myPrintf(int color,const char *format, ...){
     va_list args;
-    int i;
+    int n;
+
     va_start(args, format);
-    i = vsprintf(uBuf, format, args);
-    va_end(args);
-    uart_put_chars(uBuf);
-    append2screen(uBuf, color);
-    return 0;
+    n = vsprintf(user_buf, format, args);
+    //if (n>400) while(1);
+    append2screen(user_buf,color);
+    uart_put_chars(user_buf); 
+    va_end(args);  
+
+    return n; 
 }

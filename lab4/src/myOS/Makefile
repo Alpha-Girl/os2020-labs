@@ -1,4 +1,3 @@
-# 不需要修改
 include $(SRC_RT)/myOS/dev/Makefile
 include $(SRC_RT)/myOS/i386/Makefile
 include $(SRC_RT)/myOS/printk/Makefile

@@ -1,167 +1,130 @@
-//本文件实现vga的相关功能，清屏和屏幕输出，clear_screen和append2screen必须按照如下实现，可以增加其他函数供clear_screen和append2screen调用
+//=========================simple output===========================================
+#define VGA_BASE 0xb8000
+#define ROWS 24   // row25 is for system
+#define COLS 80
 
-extern int myPrintk(int color, const char *format, ...);
-#include "../i386/io.h"
+// with BRIGHT bit = 0
+#define BLACK   0x0
+#define BLUE    0x1
+#define GREEN   0x2
+#define CYAN    0x3
+#define RED     0x4
+#define MAGENTA 0x5
+#define BROWN   0x6
+#define LGRAY   0x7
 
-#define vga_base 0xB8000
-#define srceen_width 80
-#define srceen_height 25
+// with BRIGHT bit = 1
+#define BRIGHT  0x8
+#define DGRAY   BRIGHT & BLACK
+#define LBLUE   BRIGHT & BLUE
+#define LGREEN  BRIGHT & GREEN
+#define LCYAN   BRIGHT & CYAN
+#define LRED    BRIGHT & RED
+#define PINK    BRIGHT & MAGENTA
+#define YELLOW  BRIGHT & BROWN
+#define WHITE   BRIGHT & LGRAY
 
-// 全局变量
-unsigned short int *port;       // 指向当前输出的地址
-unsigned int p;                 // 当前输出的地址的值
-unsigned char row = 0, col = 0; // 行列
+#define BLINK   0x80
 
-unsigned char rd_row(void);                                 // 读取 光标所在的行（高8位）
-unsigned char rd_col(void);                                 // 读取 光标所在的列（低8位）
-void move(void);                                            // 滚屏：将VGA中内容向上移动一行
-void wr_row(unsigned char row_in);                          // 写入 光标所在的行（高8位）
-void wr_col(unsigned char col_in);                          // 写入 光标所在的列（低8位）
-void wr_cursor(unsigned char row_in, unsigned char col_in); // 写入 光标位置
+#include "../include/io.h"
 
-void clear_screen(void)
-{
+static void move_cursor(unsigned int _row, unsigned int _col){
+    unsigned int cursorLocation = _row * 80 + _col;
+
+    outb(0x3D4, 14); // select cursor location high register                   
+    outb(0x3D5, cursorLocation >> 8);   
+    outb(0x3D4, 15); // select cursor location low register                    
+    outb(0x3D5, cursorLocation & 0xff);        
+}
+
+unsigned char * vgaPtr(int _row, int _col){
+    unsigned char * ptr = (unsigned char *)VGA_BASE;
+    return ptr + _row * COLS * 2 + _col *2;
+}
+
+void put_char(char c, char color, int _row, int _col) {
+	unsigned char *ptr = vgaPtr(_row,_col);
+
+	*ptr++ = c; 
+    *ptr   = color;	
+}
+
+int put_chars(char *msg, char color, int _row, int _col){
+	char c, *ptr=msg;		
+    int n=0;
+	
+	c = *ptr;
+	while (c!='\0'){
+        n++;
+	    if ( _col==80 ) {	_col = 0;	_row ++;	}
+	    if ( _row==25 ) _row = 0;
+
+	    put_char(c, color, _row, _col++);	 
+
+	    c = *(++ptr);  //next char
+	}
+	return n;
+}
+
+void clear_char(int _row, int _col) {
+	unsigned char *ptr = vgaPtr(_row,_col);
+
+	*ptr++ = 0; 
+    *ptr   = 0x7;	
+}
+
+void clearLastRow(void){
+    int _col;
+    for(_col=0; _col<COLS; _col++) clear_char(ROWS-1, _col);
+}
+
+void scrollOneRow(void){        
     int i;
-    port = (unsigned short int *)vga_base;             //指针指向 第0行 第0列
-    p = vga_base;                                      //指针对应地址
-    for (i = 0; i < srceen_width * srceen_height; i++) //输出空格 实现清屏
-    {
+    unsigned char * ptr = (unsigned char *)VGA_BASE;
+    unsigned char * nextRowPtr = vgaPtr(1,0);
 
-        *port = 0x0f20;
-        p = p + 2;
-        port = (unsigned short int *)p;
+    for (i=0; i< (ROWS-1) * COLS; i++) {
+        *ptr++ = *nextRowPtr++;
+        *ptr++ = *nextRowPtr++;
     }
-    p = vga_base; //指针对应地址 置为 0xB8000
-    row = 0;      //行列置零
-    col = 0;
-    wr_cursor(row, col); //光标置零
+    clearLastRow();        
 }
 
-void append2screen(char *str, int color)
-{
-    int i, j, c;
-    unsigned short int output;
-    for (i = 0;; i++)
-    {
-        if (str[i] != '\0') //字符串是否结束
-        {
-            if (str[i] != '\n') //是否换行
-            {
-                output = color * 16 * 16 + str[i];
-                //颜色 ：前8位   ASCII码： 后8位
-                port = (unsigned short int *)(vga_base + row * 2 * srceen_width + col * 2);
-                //把指针指向 当前行列所指位置
-                *port = output;               //赋值
-                col++;                        //列移动
-                if (col > (srceen_width - 1)) //判断是否需要换行
-                {
-                    row++;
-                    col = 0;
-                }
-            }
-            else
-            {
-                row++;
-                col = 0;
-            }
-        }
-        else
-        {
-            break;
-        }
-        if (row == srceen_height - 1) //是否需要滚屏
-        {
-            move();
-            row = 23;
-            col = 0;
-        }
-        c = row * 80 + col;
-        wr_cursor(c / 256, c % 256); //光标移动
-    }
-}
-void append2srceen_info(char *str, int color)
-{
-    int i = 0;
-    for (i = 0;; i++)
-    {
-        if (str[i] != '\0')
-        {
-            port = (unsigned short int *)(vga_base + 24 * 2 * srceen_width + i * 2);
-            *port = color * 16 * 16 + str[i];
-        }
-        else
-            break;
-    }
-    for (; i < 72; i++)
-    {
-        port = (unsigned short int *)(vga_base + 24 * 2 * srceen_width + i * 2);
-        *port = 0x0f20;
-    }
-}
-void clear_char(void)
-{
-    int c;
-    if (col == 0)
-    {
-        col = 79;
-        row--;
-    }
-    else
-    {
-        col--;
-    }
-    port = (unsigned short int *)(vga_base + row * 2 * srceen_width + col * 2);
-    *port = 0x0f20;
-    c = row * 80 + col;
-    wr_cursor(c / 256, c % 256); //光标移动
-}
-void move()
-{
-    int i, j;
-    unsigned short int *tmp;
-    unsigned short int a;
-    for (i = 0; i < srceen_height - 1; i++) //将内容向上移动一行
-    {
-        for (j = 0; j < srceen_width; j++)
-        {
-            tmp = (unsigned short int *)(vga_base + (i + 1) * 160 + 2 * j); //指针指向第i行第j列
-            a = *tmp;                                                       //取值
-            tmp = (unsigned short int *)(tmp - 80);                         //指向第（i-1）行第j列
-            *tmp = a;                                                       //赋值
-        }
-    }
-    for (j = 0; j < srceen_width; j++) //最后一行 全部置为空格
-    {
-        tmp = (unsigned short int *)(vga_base + 23 * 160 + 2 * j);
-        *tmp = 0x0f20;
-    }
+void clear_screen(void) {	
+	unsigned char *ptr = (unsigned char *)VGA_BASE;  
+    unsigned int _col,_row;  
+	for(_row=0; _row< ROWS; _row++) {
+	    for (_col=0; _col<COLS; _col++) {
+            (*ptr++) = 0;  //first char
+            (*ptr++) = 0x7;  //second char
+	    }
+	}    
+    move_cursor(0,0);
+    return;
 }
 
-unsigned char rd_row(void)
-{
-    outb(0x3D4, 0xE);
-    return inb(0x3D5);
-}
+void append2screen(char *str,int color){ 
+    char c, *current =str ; 
+    unsigned int cursorLocation;
+    int row, col;
+    outb(0x3D4, 14); cursorLocation = inb(0x3D5) << 8;
+    outb(0x3D4, 15); cursorLocation |= inb(0x3D5);
 
-unsigned char rd_col(void)
-{
-    outb(0x3D4, 0xF);
-    return inb(0x3D5);
-}
+    row = cursorLocation / 80;
+    col = cursorLocation % 80;
 
-void wr_row(unsigned char row_in)
-{
-    outb(0x3D4, (unsigned char)0xE);
-    outb(0x3D5, row_in);
-}
-void wr_col(unsigned char col_in)
-{
-    outb(0x3D4, (unsigned char)0xF);
-    outb(0x3D5, col_in);
-}
-
-void wr_cursor(unsigned char row_in, unsigned char col_in)
-{
-    wr_row(row_in);
-    wr_col(col_in);
+    while(c = *current++) {
+        if (c !='\n') {
+            put_char(c,color,row,col++);              
+        } else { // for '\n'            
+            col = 0; row ++; 
+        }        
+        // what if col and row too big                
+        if (col >= COLS) { col = 0; row++; }
+        if (row >= ROWS) {            
+            scrollOneRow(); 
+            row = ROWS-1;
+        }        
+    } 
+    move_cursor(row, col); 
 }
