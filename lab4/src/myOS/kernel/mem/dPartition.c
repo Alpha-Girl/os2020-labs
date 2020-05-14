@@ -33,21 +33,26 @@ unsigned long dPartitionInit(unsigned long start, unsigned long totalSize)
 	if (totalSize < (sizeof(struct dPartition) + sizeof(struct EMB)))
 		return 0;
 	struct dPartition *pdP = (struct dPartition *)start;
-	pdP->size = totalSize + sizeof(struct dPartition) + sizeof(struct EMB);
-	pdP->firstFreeStart = start + sizeof(struct dPartition) + sizeof(struct EMB);
-	struct EMB *pEMB = (struct EMB *)(start + sizeof(struct dPartition));
-	pEMB->size = totalSize;
-	pEMB->nextStart = start + pdP->size;
+	pdP->size = totalSize - sizeof(struct dPartition);
+	pdP->firstFreeStart = start + sizeof(struct dPartition) ;
+	struct EMB *pEMB = (struct EMB *)(pdP->firstFreeStart);
+	pEMB->size = totalSize-sizeof(struct dPartition)-sizeof(struct EMB);
+	pEMB->nextStart = NULL;
 	return start;
 }
 
 void dPartitionWalkByAddr(unsigned long dp)
 {
-	//本函数需要实现！！！
-	/*本函数遍历输出EMB 方便调试
-	先打印dP的信息，可调用上面的showdPartition。
-	然后按地址的大小遍历EMB，对于每一个EMB，可以调用上面的showEMB输出其信息
-	*/
+	//打印dP的信息
+	showdPartition((struct dPartition *)dp);
+	struct EMB *pEMB=(struct EMB*)(((struct dPartition*) dp)->firstFreeStart);
+	while (pEMB!=0)
+	{
+		//打印EMB的信息
+		showEMB(pEMB);
+		pEMB=(struct EMB*)(pEMB->nextStart);
+	}
+	
 }
 
 //=================firstfit, order: address, low-->high=====================
