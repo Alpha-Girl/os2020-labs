@@ -34,9 +34,9 @@ unsigned long dPartitionInit(unsigned long start, unsigned long totalSize)
 		return 0;
 	struct dPartition *pdP = (struct dPartition *)start;
 	pdP->size = totalSize - sizeof(struct dPartition);
-	pdP->firstFreeStart = start + sizeof(struct dPartition) ;
+	pdP->firstFreeStart = start + sizeof(struct dPartition);
 	struct EMB *pEMB = (struct EMB *)(pdP->firstFreeStart);
-	pEMB->size = totalSize-sizeof(struct dPartition)-sizeof(struct EMB);
+	pEMB->size = totalSize - sizeof(struct dPartition) - sizeof(struct EMB);
 	pEMB->nextStart = NULL;
 	return start;
 }
@@ -45,14 +45,13 @@ void dPartitionWalkByAddr(unsigned long dp)
 {
 	//打印dP的信息
 	showdPartition((struct dPartition *)dp);
-	struct EMB *pEMB=(struct EMB*)(((struct dPartition*) dp)->firstFreeStart);
-	while (pEMB!=0)
+	struct EMB *pEMB = (struct EMB *)(((struct dPartition *)dp)->firstFreeStart);
+	while (pEMB != 0)
 	{
 		//打印EMB的信息
 		showEMB(pEMB);
-		pEMB=(struct EMB*)(pEMB->nextStart);
+		pEMB = (struct EMB *)(pEMB->nextStart);
 	}
-	
 }
 
 //=================firstfit, order: address, low-->high=====================
@@ -61,14 +60,31 @@ void dPartitionWalkByAddr(unsigned long dp)
 **/
 unsigned long dPartitionAllocFirstFit(unsigned long dp, unsigned long size)
 {
-	//本函数需要实现！！！
-	/*
-	使用firstfit的算法分配空间，当然也可以使用其他fit，不限制。
-	最后，成功分配返回首地址，不成功返回0
-	注意的地方：
-	1、和eFPartition一样，要注意实际分配的block的大小和传入的参数size是不一样的。要注意字节对齐的问题，还有它最小值不是0，因为EMB数据结构有大小。在比较所需要的大小和block的size时候，也用的是实际分配需要的大小而非传入的参数size。
-	2、分配就好像是链表的一个块分裂成两个，注意边界情况。
-	*/
+	//大小判断
+	if (size < sizeof(struct EMB))
+		size = sizeof(struct EMB);
+	//32字节对齐
+	if (size % 32)
+		size = ((size >> 5) + 1) << 5;
+	struct EMB *pEMB = (struct EMB *)(((struct dPartition *)dp)->firstFreeStart);
+	while (pEMB != 0)
+	{
+		//判断大小是否满足
+		if (pEMB->size > (size + sizeof(struct EMB)))
+		{
+			//分配
+			struct EMB *n_pEMB = (struct EMB *)((unsigned long)pEMB + size + sizeof(struct EMB));
+			n_pEMB->size = pEMB->size - size - 2 * sizeof(struct EMB);
+			n_pEMB->nextStart = pEMB->nextStart;
+			pEMB->nextStart = (unsigned long)n_pEMB;
+			pEMB->size = size;
+			return (unsigned long)pEMB + sizeof(struct EMB);
+		}
+		//寻找下一空闲块
+		pEMB = (struct EMB *)pEMB->nextStart;
+	}
+	//分配失败
+	return 0;
 }
 
 /*
