@@ -37,11 +37,9 @@ void eFPartitionWalkByAddr(unsigned long efpHandler)
 
 unsigned long eFPartitionTotalSize(unsigned long perSize, unsigned long n)
 {
-	//本函数需要实现！！！
-	/*根据参数persize（每个大小）和n个数计算总大小，注意persize的对齐，例如persize是31字节，你想8字节对齐，那么计算大小实际代入的一个块的大小就是32字节。
-	最后别忘记加上eFPartition这个数据结构的大小，因为它也占一定的空间
-
-	*/
+	if (perSize % 32)
+		perSize = (perSize >> 5 + 1) << 5;
+	return (perSize * n + sizeof(struct eFPartition));
 }
 
 unsigned long eFPartitionInit(unsigned long start, unsigned long perSize, unsigned long n)
