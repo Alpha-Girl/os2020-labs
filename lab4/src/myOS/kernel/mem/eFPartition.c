@@ -65,9 +65,11 @@ unsigned long eFPartitionInit(unsigned long start, unsigned long perSize, unsign
 
 unsigned long eFPartitionAlloc(unsigned long EFPHandler)
 {
-	//本函数需要实现！！！
-	/*本函数分配一个空闲块的内存并返回相应的地址，EFPHandler表示整个内存的首地址
-	*/
+	struct eFPartition *peFP=(struct eFPartition *)EFPHandler;
+	unsigned long save=peFP->firstFree;
+	struct EEB *pEEB=(struct EEB *)save;
+	peFP->firstFree=pEEB->next_start;
+	return save;
 }
 
 unsigned long eFPartitionFree(unsigned long EFPHandler, unsigned long mbStart)
