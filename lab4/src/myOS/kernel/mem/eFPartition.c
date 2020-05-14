@@ -44,11 +44,23 @@ unsigned long eFPartitionTotalSize(unsigned long perSize, unsigned long n)
 
 unsigned long eFPartitionInit(unsigned long start, unsigned long perSize, unsigned long n)
 {
-	//本函数需要实现！！！
-	/*初始化内存
-	第一步需要创建一个eFPartition结构体，需要注意的是结构体的persize不是直接传入的参数perSize，需要对齐。结构体的nextStart也是需要考虑一下结构体本身的大小。
-	第二步就是对每一块的内存创建一个EEB，将他们连起来构成一个链。注意最后一块的EEB的nextstart应该是0
-	*/
+	struct eFPartition *peFP = (struct eFPartition *)start;
+	peFP->totalN = n;
+	//对齐
+	if (perSize % 32)
+		perSize = (perSize >> 5 + 1) << 5;
+	peFP->perSize = perSize;
+	unsigned long n_posi = start + sizeof(struct eFPartition);
+	peFP->firstFree = n_posi;
+	struct EEB *pEEB = (struct EEB *)n_posi;
+	//连接成链
+	for (int i = 0; i < n - 1; i++)
+	{
+		pEEB->next_start=n_posi+perSize;
+		pEEB=(struct EEB *)(pEEB->next_start);
+	}
+	pEEB->next_start=0;
+	return 1;
 }
 
 unsigned long eFPartitionAlloc(unsigned long EFPHandler)
