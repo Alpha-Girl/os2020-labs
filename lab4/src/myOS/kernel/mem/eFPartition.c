@@ -56,27 +56,32 @@ unsigned long eFPartitionInit(unsigned long start, unsigned long perSize, unsign
 	//连接成链
 	for (int i = 0; i < n - 1; i++)
 	{
-		pEEB->next_start=n_posi+perSize;
-		pEEB=(struct EEB *)(pEEB->next_start);
+		pEEB->next_start = n_posi + perSize;
+		pEEB = (struct EEB *)(pEEB->next_start);
 	}
-	pEEB->next_start=0;
+	pEEB->next_start = 0;
 	return 1;
 }
 
 unsigned long eFPartitionAlloc(unsigned long EFPHandler)
 {
-	struct eFPartition *peFP=(struct eFPartition *)EFPHandler;
-	unsigned long save=peFP->firstFree;
-	struct EEB *pEEB=(struct EEB *)save;
-	peFP->firstFree=pEEB->next_start;
+	struct eFPartition *peFP = (struct eFPartition *)EFPHandler;
+	unsigned long save = peFP->firstFree;
+	struct EEB *pEEB = (struct EEB *)save;
+	peFP->firstFree = pEEB->next_start;
 	return save;
 }
 
 unsigned long eFPartitionFree(unsigned long EFPHandler, unsigned long mbStart)
 {
-	//本函数需要实现！！！
-	/*初始化内存
-	free掉mbstart之前的内存，mbstart为第一个空闲块的地址。也要更新EBB组成的链表。
-	*/
+	struct eFPartition *peFP = (struct eFPartition *)EFPHandler;
+	unsigned long point = (EFPHandler + sizeof(struct eFPartition));
+	struct EEB *pEEB = (struct EEB *)point;
+	while (point <= mbStart)
+	{
+		pEEB->next_start = peFP->firstFree;
+		peFP->firstFree = point;
+		point = point + peFP->perSize;
+	}
 	return 1;
 }
