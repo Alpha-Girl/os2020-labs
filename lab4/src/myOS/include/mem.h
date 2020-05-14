@@ -1,5 +1,7 @@
 #ifndef __MEM_H__
 #define __MEM_H__
+unsigned long pMemStart; //可用的内存的起始地址
+unsigned long pMemSize; //可用的大小
 //TODO: seperate user interface and kernel interface
 unsigned long dPartitionInit(unsigned long start, unsigned long size);
 unsigned long dPartitionAlloc(unsigned long dp, unsigned long size);
