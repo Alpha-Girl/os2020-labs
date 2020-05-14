@@ -138,16 +138,39 @@ unsigned long dPartitionAllocFirstFit(unsigned long dp, unsigned long size)
  */
 unsigned long dPartitionFreeFirstFit(unsigned long dp, unsigned long start)
 {
-	//本函数需要实现！！！
-	/*按照对应的fit的算法释放空间
-	注意检查要释放的start~end这个范围是否在dp有效分配范围内
-	返回1 没问题
-	返回0 error
-	*/
+	int flag = 0;
+	unsigned long save;
 	struct dPartition *pdP = (struct dPartition *)dp;
-	if (start > dp + pdP->size)
+	//检查
+	if (start > dp + pdP->size || start < dp)
 		return 0;
-	struct EMB *pEMB = (struct EMB *)()
+	struct EMB *pEMB = (struct EMB *)(pdP->firstFreeStart);
+	struct EMB *pEMB_b = NULL;
+	//找到start所在区域的前后EMB
+	while (pEMB != NULL && (unsigned long)pEMB < start)
+	{
+		flag = 1;
+		pEMB_b = pEMB;
+		pEMB = (struct EMB *)(pEMB->nextStart);
+	}
+	if (flag == 0)
+	{
+		//若前面为dp
+		pdP->firstFreeStart = start;
+		save = pEMB->nextStart;
+		pEMB = (struct EMB *)(pdP->firstFreeStart);
+		pEMB->nextStart = save;
+		pEMB->size = save - (pdP->firstFreeStart);
+	}
+	else
+	{
+		save = pEMB->nextStart;
+		pEMB = (struct EMB *)start;
+		pEMB->nextStart = save;
+		pEMB->size = save - start;
+		pEMB_b->nextStart = start;
+	}
+	return 1;
 }
 
 //wrap: we select firstFit, you can select another one
