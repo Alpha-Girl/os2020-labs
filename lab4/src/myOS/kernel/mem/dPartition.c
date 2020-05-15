@@ -1,4 +1,5 @@
 #include "../../include/myPrintk.h"
+#include "../../include/mem.h"
 
 //dPartition 是整个动态分区内存的数据结构
 struct dPartition
@@ -29,28 +30,26 @@ void showEMB(struct EMB *emb)
 
 unsigned long dPartitionInit(unsigned long start, unsigned long totalSize)
 {
-	//totalsize大小判断
-	if (totalSize < (sizeof(struct dPartition) + sizeof(struct EMB)))
-		return 0;
-	struct dPartition *pdP = (struct dPartition *)start;
-	pdP->size = totalSize - sizeof(struct dPartition);
-	pdP->firstFreeStart = start + sizeof(struct dPartition);
-	struct EMB *pEMB = (struct EMB *)(pdP->firstFreeStart);
-	pEMB->size = totalSize - sizeof(struct dPartition);
-	pEMB->nextStart = NULL;
+	//内存初始化
+	struct dPartition *pdp = (struct dPartition *)start;
+	pdp->size = totalSize - sizeof(struct dPartition);
+	pdp->firstFreeStart = start + sizeof(struct dPartition);
+	struct EMB *pemb = (struct EMB *)(pdp->firstFreeStart);
+	pemb->size = sizeof(struct EMB);
+	pemb->nextStart = start + totalSize;
 	return start;
 }
 
 void dPartitionWalkByAddr(unsigned long dp)
 {
-	//打印dP的信息
+	//打印dP
 	showdPartition((struct dPartition *)dp);
-	struct EMB *pEMB = (struct EMB *)(((struct dPartition *)dp)->firstFreeStart);
-	while (pEMB != 0)
+	struct EMB *pemb = (struct EMB *)(((struct dPartition *)dp)->firstFreeStart);
+	//打印EMB
+	while (pemb != 0)
 	{
-		//打印EMB的信息
-		showEMB(pEMB);
-		pEMB = (struct EMB *)(pEMB->nextStart);
+		showEMB(pemb);
+		pemb = (struct EMB *)pemb->nextStart;
 	}
 }
 
@@ -60,76 +59,30 @@ void dPartitionWalkByAddr(unsigned long dp)
 **/
 unsigned long dPartitionAllocFirstFit(unsigned long dp, unsigned long size)
 {
-	//大小判断
-	int flag = 0;
-	unsigned long save, pre_size, pre_n_start;
-	if (size < sizeof(struct EMB))
-		size = sizeof(struct EMB);
-	//32字节对齐
-	if (size % 32)
-		size = ((size >> 5) + 1) << 5;
-	struct EMB *pEMB = (struct EMB *)(((struct dPartition *)dp)->firstFreeStart);
-	struct EMB *pEMB_b;
-	while (pEMB != 0)
+	//判断
+	if (size > pMemSize)
+		return 0;
+	//对齐
+	if(size%4)
+	size = ((1+(size >> 2)) << 2);
+	struct EMB *pemb = (struct EMB *)(((struct dPartition *)dp)->firstFreeStart);
+	while (pemb != 0)
 	{
-		//判断大小是否满足
-		if (pEMB->size >= size)
+		if (pemb->size + size <= pemb->nextStart - (unsigned long)pemb)
 		{
-			//分配
-			//边界判断
-			if (pEMB->size == size)
+			//大小满足，分配
+			pemb->size += size;
+			if (pemb->size + sizeof(struct EMB) <= pemb->nextStart - (unsigned long)pemb)
 			{
-				if (flag == 0)
-				{
-					struct dPartition *pdP = (struct dPartition *)dp;
-					save = pdP->firstFreeStart;
-					pdP->firstFreeStart = pEMB->nextStart;
-					return save;
-				}
-				else
-				{
-					save = pEMB_b->nextStart;
-					pEMB_b->nextStart = pEMB->nextStart;
-					return save;
-				}
+				struct EMB *pemb1 = (struct EMB *)((unsigned long)pemb + pemb->size + sizeof(struct EMB));
+				pemb1->nextStart = pemb->nextStart;
+				pemb->nextStart = (unsigned long)pemb1;
+				pemb1->size = sizeof(struct EMB);
 			}
-			else
-			{
-				if (flag == 0)
-				{
-					struct dPartition *pdP = (struct dPartition *)dp;
-					save = pdP->firstFreeStart;
-					pre_size = pEMB->size;
-					pre_n_start = pEMB->nextStart;
-					pEMB = (struct EMB *)(pEMB_b->nextStart + size);
-					pEMB->size = pre_size - size;
-					pEMB = pre_n_start;
-					pdP->firstFreeStart = pdP->firstFreeStart + size;
-					return save;
-				}
-				else
-				{
-					save = pEMB_b->nextStart;
-					pre_size = pEMB->size;
-					pre_n_start = pEMB->nextStart;
-					pEMB = (struct EMB *)(save + size);
-					pEMB->nextStart = pre_n_start;
-					pEMB->size = pre_size - size;
-					pEMB_b->nextStart = save + size;
-					return save;
-				}
-			}
-			n_pEMB->nextStart = pEMB->nextStart;
-			pEMB->nextStart = (unsigned long)n_pEMB;
-			pEMB->size = size;
-			return (unsigned long)pEMB + sizeof(struct EMB);
+			return (unsigned long)pemb + sizeof(struct EMB);
 		}
-		//寻找下一空闲块
-		pEMB_b = pEMB;
-		pEMB = (struct EMB *)pEMB->nextStart;
-		flag = 1;
+		pemb = (struct EMB *)pemb->nextStart;
 	}
-	//分配失败
 	return 0;
 }
 
@@ -138,37 +91,26 @@ unsigned long dPartitionAllocFirstFit(unsigned long dp, unsigned long size)
  */
 unsigned long dPartitionFreeFirstFit(unsigned long dp, unsigned long start)
 {
-	int flag = 0;
-	unsigned long save;
-	struct dPartition *pdP = (struct dPartition *)dp;
-	//检查
-	if (start > dp + pdP->size || start < dp)
+	struct dPartition *pdp = (struct dPartition *)dp;
+	//判断
+	if (start > dp + pdp->size)
 		return 0;
-	struct EMB *pEMB = (struct EMB *)(pdP->firstFreeStart);
-	struct EMB *pEMB_b = NULL;
-	//找到start所在区域的前后EMB
-	while (pEMB != NULL && (unsigned long)pEMB < start)
+	struct EMB *pemb = (struct EMB *)(pdp->firstFreeStart);
+	struct EMB *pemb1 = 0;
+	while (pemb != 0 && (unsigned long)pemb + pemb->size < start)
 	{
-		flag = 1;
-		pEMB_b = pEMB;
-		pEMB = (struct EMB *)(pEMB->nextStart);
+		pemb1 = pemb;
+		pemb = (struct EMB *)(pemb->nextStart);
 	}
-	if (flag == 0)
+	//释放
+	if (pemb != 0)
 	{
-		//若前面为dp
-		pdP->firstFreeStart = start;
-		save = pEMB->nextStart;
-		pEMB = (struct EMB *)(pdP->firstFreeStart);
-		pEMB->nextStart = save;
-		pEMB->size = save - (pdP->firstFreeStart);
-	}
-	else
-	{
-		save = pEMB->nextStart;
-		pEMB = (struct EMB *)start;
-		pEMB->nextStart = save;
-		pEMB->size = save - start;
-		pEMB_b->nextStart = start;
+		pemb->size = start - (unsigned long)pemb;
+		if (pemb->size == sizeof(struct EMB))
+		{
+			pemb1->size += pemb->nextStart - pemb1->nextStart;
+			pemb1->nextStart = pemb->nextStart;
+		}
 	}
 	return 1;
 }
