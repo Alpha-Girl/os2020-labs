@@ -28,6 +28,7 @@ void eFPartitionWalkByAddr(unsigned long efpHandler)
 	struct eFPartition *peFP = (struct eFPartition *)efpHandler;
 	showeFPartition(peFP);
 	struct EEB *pEEB = (struct EEB *)(peFP->firstFree);
+	//遍历
 	while (pEEB != 0)
 	{
 		showEEB(pEEB);
@@ -48,8 +49,9 @@ unsigned long eFPartitionInit(unsigned long start, unsigned long perSize, unsign
 	peFP->totalN = n;
 	//对齐
 	if (perSize % 32)
-		perSize = (perSize >> 5 + 1) << 5;
+		perSize = (perSize /32 + 1) * 32;
 	peFP->perSize = perSize;
+	myPrintk(0x7,"\npersize%d\n",perSize);
 	unsigned long n_posi = start + sizeof(struct eFPartition);
 	peFP->firstFree = n_posi;
 	struct EEB *pEEB = (struct EEB *)n_posi;
@@ -58,15 +60,17 @@ unsigned long eFPartitionInit(unsigned long start, unsigned long perSize, unsign
 	{
 		pEEB->next_start = n_posi + perSize;
 		pEEB = (struct EEB *)(pEEB->next_start);
+		n_posi+=perSize;
 	}
 	pEEB->next_start = 0;
-	return 1;
+	return start;
 }
 
 unsigned long eFPartitionAlloc(unsigned long EFPHandler)
 {
 	struct eFPartition *peFP = (struct eFPartition *)EFPHandler;
 	unsigned long save = peFP->firstFree;
+	//分配
 	struct EEB *pEEB = (struct EEB *)save;
 	peFP->firstFree = pEEB->next_start;
 	return save;
@@ -77,6 +81,7 @@ unsigned long eFPartitionFree(unsigned long EFPHandler, unsigned long mbStart)
 	struct eFPartition *peFP = (struct eFPartition *)EFPHandler;
 	unsigned long point = (EFPHandler + sizeof(struct eFPartition));
 	struct EEB *pEEB = (struct EEB *)point;
+	//连接成链
 	while (point <= mbStart)
 	{
 		pEEB->next_start = peFP->firstFree;
