@@ -3,45 +3,42 @@
 unsigned long pMemStart; //可用的内存的起始地址
 unsigned long pMemSize;	 //可用的大小
 
-void memTest(unsigned long start, unsigned long grainSize)
+void memTest(unsigned long start, unsigned long grainsize)
 {
-	unsigned short *p, save;
-	unsigned long max_addr;
-	//对开始的地址 和 grainSize 做判断
-	if (start < (1 << 20))
-		start = 1 << 20;
-	if (grainSize < (1 << 10))
-		grainSize = 1 << 10;
-	p = (unsigned short *)start;
+	//大小判断
+	start = start > (1 << 20) ? start : (1 << 20);
+	grainsize = grainsize >= (1 << 10) ? grainsize : (1 << 10);
+	pMemStart = start;
+	pMemSize = 0;
+	unsigned long position = start;
+	unsigned short *pus = (unsigned short *)start;
+	//内存检查
 	while (1)
 	{
-		//对grain的前两个字节进行读写
-		save = *p;
-		*p = 0xaa55;
-		if (*p != 0xaa55)
+		unsigned short save = *pus;
+		*pus = 0xAA55;
+		if (*pus != 0xAA55)
 			break;
-		*p = 0x55aa;
-		if (*p != 0x55aa)
+		*pus = 0x55AA;
+		if (*pus != 0x55AA)
 			break;
-		*p = save;
+		*pus = save;
 
-		p = (unsigned short *)(p + grainSize - sizeof(unsigned short));
-		//对grain的后两个字节进行读写
-		save = *p;
-		*p = 0xaa55;
-		if (*p != 0xaa55)
+		pus = (unsigned short *)((unsigned long)pus + grainsize - sizeof(unsigned short));
+		save = *pus;
+		*pus = 0xAA55;
+		if (*pus != 0xAA55)
 			break;
-		*p = 0x55aa;
-		if (*p != 0x55aa)
+		*pus = 0x55AA;
+		if (*pus != 0x55AA)
 			break;
-		*p = save;
+		*pus = save;
 
-		p = (unsigned short *)(p + sizeof(unsigned short));
-		max_addr = (unsigned long)p;
+		pus = (unsigned short *)((unsigned long)pus + sizeof(unsigned short));
+		position = (unsigned long)pus;
 	}
-	//输出可用的内存的起始地址和大小，赋值给全局变量
-	pMemStart = start;
-	pMemSize = max_addr - pMemStart;
+	pMemSize = position - pMemStart;
+	//输出可用的内存的起始地址和大小
 	myPrintk(0x7, "MemStart: %x  \n", pMemStart);
 	myPrintk(0x7, "MemSize:  %x  \n", pMemSize);
 }
@@ -57,6 +54,5 @@ void pMemInit(void)
 		pMemSize -= _end_addr - pMemStart;
 		pMemStart = _end_addr;
 	}
-
 	pMemHandler = dPartitionInit(pMemStart, pMemSize);
 }
