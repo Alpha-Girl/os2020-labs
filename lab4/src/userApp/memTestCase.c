@@ -96,7 +96,7 @@ int testdP1(int argc, unsigned char **argv){
 				myPrintf(0x5, "failed!\n");
 				break;
 			}
-			
+			if(i==0)break;
 			i <<= 1;
 		}
 
@@ -298,7 +298,8 @@ int testeFP(int argc, unsigned char **argv){
 #define NULL (void*)0
 void memTestCaseInit(void){	
 	addNewCmd("testMalloc1\0", testCase1, NULL, "Malloc, write and read.\0");
-	addNewCmd("testMalloc2\0", testCase2, NULL, "Malloc, write and read.\0");		
+	addNewCmd("testMalloc2\0", testCase2, NULL, "Malloc, write and read.\0");	
+	
 	addNewCmd("maxMallocSizeNow\0", maxMallocSizeNow, NULL, "MAX_MALLOC_SIZE always changes. What's the value Now?\0");
 
 	addNewCmd("testdP1\0", testdP1, NULL, "Init a dPatition(size=0x100). [Alloc,Free]* with step = 0x20\0");

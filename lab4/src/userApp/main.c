@@ -24,6 +24,7 @@ void myMain(void){
 
 	initShell();
     memTestCaseInit();
+	kmemTestCaseInit();
     startShell();
     return;
 }
