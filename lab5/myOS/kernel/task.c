@@ -51,11 +51,14 @@ void stack_init(unsigned long **stk, void (*task)(void)){
  * 必须实现的外部接口
  */
 void tskStart(myTCB *tsk){
-#error "TODO: 实现本函数"
+
+     tsk->state=TSK_RDY;
+     tskEnqueueFCFS(tsk);
 }
 
 void tskEnd(void){
-#error "TODO: 实现本函数"
+     tskDequeueFCFS(currentTsk);
+     destroyTsk(currentTsk->tcbIndex);
 }
 
 /* createTsk
