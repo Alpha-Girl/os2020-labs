@@ -27,6 +27,9 @@ myTCB * nextFCFSTsk(void) {
 
 /* tskEnqueueFCFS: insert into the tail node */
 void tskEnqueueFCFS(myTCB *tsk) {
+     if(rqFCFSIsEmpty()){
+          rqFCFS.head
+     }
 }
 
 /* tskDequeueFCFS: delete the first node */
@@ -104,4 +107,24 @@ void TaskManagerInit(void) {
      // 创建 idle 任务
      // 创建 init 任务（使用 initTskBody）
      // 切入多任务状态
+     int i;
+     myTCB *thisTCB;
+     for (i=0;i<TASK_NUM;i++){
+          thisTCB=&tcbPool[i];
+          thisTCB->tcbIndex=i;
+          if(i==TASK_NUM-1)
+               thisTCB->next=(myTCB *)0;
+          else
+               thisTCB->next=&tcbPool[i+1];
+          thisTCB->stkTop=thisTCB->stack +STACK_SIZE -1;
+
+     }
+     idleTsk=&tcbPool[0];
+     stack_init(&(idleTsk->stkTop),tskIdleBdy);
+     rqFCFSInit(idleTsk);
+     firstFreeTsk=&tcbPool[1];
+     createTsk(initTskBody);
+     myPrintk(0x2,"START MULTITASKING......\n");
+     startMultitask();
+     myPrintk(0x2,"STOP MULTITASKING......ShutDown\n");
 }
