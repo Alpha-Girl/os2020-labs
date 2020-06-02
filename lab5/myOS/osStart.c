@@ -15,7 +15,14 @@ void osStart(void){
 
      clear_screen();
 
-#error "TODO: 初始化内存和任务管理"
 
+     pMemInit();//初始化内存
+     {
+          unsigned long tmp =dPartitionAlloc(pMemInit,100);
+          dPartitionWalkByAddr(pMemHandler);
+          dPartitionFree(pMemHandler,tmp);
+          dPartitionWalkByAddr(pMemHandler);
+     }
+     TaskManagerInit();//初始化任务管理
      while(1);
 }
