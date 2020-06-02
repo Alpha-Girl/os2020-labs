@@ -10,12 +10,15 @@ void startShell(void);
 // init task 入口
 void myMain(void) {
      clear_screen();
+     doSomeTestBefore();
 
      createTsk(myTsk0);
      createTsk(myTsk1);
      createTsk(myTsk2);
 
-#error "TODO: 初始化 shell 并创建 shell task"
 
+     initShell();
+     memTestCaseInit();
+     createTsk(startShell);
      tskEnd();
 }
