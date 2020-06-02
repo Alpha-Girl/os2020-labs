@@ -28,12 +28,18 @@ myTCB * nextFCFSTsk(void) {
 /* tskEnqueueFCFS: insert into the tail node */
 void tskEnqueueFCFS(myTCB *tsk) {
      if(rqFCFSIsEmpty()){
-          rqFCFS.head
+          rqFCFS.head=tsk;
      }
+     else
+     rqFCFS.tail->next=tsk;
+     rqFCFS.tail=tsk;
 }
 
 /* tskDequeueFCFS: delete the first node */
 void tskDequeueFCFS(myTCB *tsk) {
+     rqFCFS.head=rqFCFS.head->next;
+     if(tsk==rqFCFS.tail)
+          rqFCFS.tail=(void *)0;
 }
 
 // 用于初始化新创建的 task 的栈
