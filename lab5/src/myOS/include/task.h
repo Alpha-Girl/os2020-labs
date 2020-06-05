@@ -12,10 +12,16 @@
 void initTskBody(void);
 
 void CTX_SW(void*prev_stkTop, void*next_stkTop);
-
-#error "TODO: 为 myTCB 增补合适的字段"
+int createTsk(void (*tskBody)(void));
+void tskEnd(void);
 typedef struct myTCB {
      unsigned long *stkTop;     /* 栈顶指针 */
+     void (*f)(void);
+     unsigned long tcbIndex;
+     unsigned long *stack;
+     unsigned char a[4096];
+     unsigned long state;
+     struct myTCB *next;
 } myTCB;
 
 myTCB tcbPool[TASK_NUM];

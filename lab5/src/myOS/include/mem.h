@@ -13,9 +13,10 @@ unsigned long eFPartitionAlloc(unsigned long EFPHandler);
 unsigned long eFPartitionFree(unsigned long EFPHandler,unsigned long mbStart);
 
 void eFPartitionWalkByAddr(unsigned long efp);
-
+void memTestCaseInit(void);
 void pMemInit(void);
-
+void doSomeTestBefore(void);
 unsigned long pMemHandler;
+unsigned long pMemStart;
 //TODO: seperate kernel heap and user heap
 #endif

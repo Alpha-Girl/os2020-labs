@@ -1,6 +1,6 @@
 #include "../include/task.h"
 #include "../include/myPrintk.h"
-
+#include "../include/mem.h"
 void schedule(void);
 void destroyTsk(int takIndex);
 
@@ -8,6 +8,8 @@ void destroyTsk(int takIndex);
  * 内部接口参考
  */
 #define TSK_RDY 0
+#define TSK_RUN 1
+#define TSK_STOP 2
 typedef struct rdyQueueFCFS
 {
      myTCB *head;
@@ -19,23 +21,29 @@ rdyQueueFCFS rqFCFS;
 
 void rqFCFSInit(myTCB *idleTsk)
 {
+     rqFCFS.head = (void *)0;
+     rqFCFS.tail = (void *)0;
+     rqFCFS.idleTsk = idleTsk;
 }
 
 int rqFCFSIsEmpty(void)
 {
+     return ((rqFCFS.head == (void *)0) && (rqFCFS.tail == (void *)0));
 }
 
 myTCB *nextFCFSTsk(void)
 {
+     if (rqFCFSIsEmpty())
+          return rqFCFS.idleTsk;
+     else
+          return rqFCFS.head;
 }
 
 /* tskEnqueueFCFS: insert into the tail node */
 void tskEnqueueFCFS(myTCB *tsk)
 {
      if (rqFCFSIsEmpty())
-     {
           rqFCFS.head = tsk;
-     }
      else
           rqFCFS.tail->next = tsk;
      rqFCFS.tail = tsk;
@@ -53,20 +61,19 @@ void tskDequeueFCFS(myTCB *tsk)
 // 这样切换到该任务时不会 stack underflow
 void stack_init(unsigned long **stk, void (*task)(void))
 {
-     *(*stk)--=(unsigned long)0x08;
-     *(*stk)--=(unsigned long)task;
-     *(*stk)--=(unsigned long)0x0202;
-     
-     *(*stk)--=(unsigned long)0xAAAAAAAA;
-     *(*stk)--=(unsigned long)0xCCCCCCCC;
-     *(*stk)--=(unsigned long)0xDDDDDDDD;
-     *(*stk)--=(unsigned long)0xBBBBBBBB;
-     
-     *(*stk)--=(unsigned long)0x44444444;
-     *(*stk)--=(unsigned long)0x55555555;
-     *(*stk)--=(unsigned long)0x66666666;
-     *(*stk)--=(unsigned long)0x77777777;
-     
+     *(*stk)-- = (unsigned long)0x08;
+     *(*stk)-- = (unsigned long)task;
+     *(*stk)-- = (unsigned long)0x0202;
+
+     *(*stk)-- = (unsigned long)0xAAAAAAAA;
+     *(*stk)-- = (unsigned long)0xCCCCCCCC;
+     *(*stk)-- = (unsigned long)0xDDDDDDDD;
+     *(*stk)-- = (unsigned long)0xBBBBBBBB;
+
+     *(*stk)-- = (unsigned long)0x44444444;
+     *(*stk)-- = (unsigned long)0x55555555;
+     *(*stk)-- = (unsigned long)0x66666666;
+     *(*stk)-- = (unsigned long)0x77777777;
 }
 
 /**
@@ -91,28 +98,46 @@ void tskEnd(void)
  */
 int createTsk(void (*tskBody)(void))
 {
-#error "TODO: 实现本函数"
+     myTCB *allocted = firstFreeTsk;
+     stack_init(&(firstFreeTsk->stkTop), tskBody);
+     firstFreeTsk->f=(unsigned long)tskBody;
+     firstFreeTsk = firstFreeTsk->next;
+     return allocted->tcbIndex;
 }
 
 /* destroyTsk
  * takIndex:
  * return value: void
  */
-void destroyTsk(int takIndex)
+void destroyTsk(int tskIndex)
 {
-#error "TODO: 实现本函数"
+     tcbPool[tskIndex].next = firstFreeTsk;
+     firstFreeTsk = &tcbPool[tskIndex];
 }
 
 unsigned long **prevTSK_StackPtr;
 unsigned long *nextTSK_StackPtr;
 void context_switch(myTCB *prevTsk, myTCB *nextTsk)
 {
-#error "TODO: 实现本函数"
+     CTX_SW(prevTsk->stkTop, nextTsk->stkTop);
 }
 
 void scheduleFCFS(void)
 {
-#error "TODO: 实现本函数"
+     myTCB *nexttsk;
+     void (*ff)(void);
+     unsigned long *a;
+     if (rqFCFSIsEmpty())
+          ;
+     else
+     {
+          nexttsk = nextFCFSTsk();
+          context_switch(nexttsk, currentTsk);
+          currentTsk = nexttsk;
+          ff=currentTsk->f;
+          ff();
+          
+     }
 }
 
 void schedule(void)
@@ -125,9 +150,12 @@ void schedule(void)
  */
 void tskIdleBdy(void)
 {
-#error "TODO: 实现本函数"
+     while (1)
+     {
+          schedule();
+     }
 }
-
+#define STACK_SIZE 4096
 unsigned long BspContextBase[STACK_SIZE];
 unsigned long *BspContext;
 
@@ -140,16 +168,13 @@ void startMultitask(void)
      nextTSK_StackPtr = currentTsk->stkTop;
      CTX_SW(prevTSK_StackPtr, nextTSK_StackPtr);
 }
-
+extern unsigned long _end;
 void TaskManagerInit(void)
 {
-#error "TODO: 实现本函数"
-     // 初始化 TCB 数组
-     // 创建 idle 任务
-     // 创建 init 任务（使用 initTskBody）
-     // 切入多任务状态
      int i;
      myTCB *thisTCB;
+     // 初始化 TCB 数组
+     tcbPool[0].stack = tcbPool[0].a;
      for (i = 0; i < TASK_NUM; i++)
      {
           thisTCB = &tcbPool[i];
@@ -157,14 +182,20 @@ void TaskManagerInit(void)
           if (i == TASK_NUM - 1)
                thisTCB->next = (myTCB *)0;
           else
+          {
                thisTCB->next = &tcbPool[i + 1];
+               thisTCB->next->stack = thisTCB->stack + sizeof(myTCB);
+          }
           thisTCB->stkTop = thisTCB->stack + STACK_SIZE - 1;
      }
+     // 创建 idle 任务
      idleTsk = &tcbPool[0];
      stack_init(&(idleTsk->stkTop), tskIdleBdy);
      rqFCFSInit(idleTsk);
      firstFreeTsk = &tcbPool[1];
+     // 创建 init 任务（使用 initTskBody）
      createTsk(initTskBody);
+     // 切入多任务状态
      myPrintk(0x2, "START MULTITASKING......\n");
      startMultitask();
      myPrintk(0x2, "STOP MULTITASKING......ShutDown\n");

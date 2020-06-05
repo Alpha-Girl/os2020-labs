@@ -1,6 +1,6 @@
 #include "../../include/myPrintk.h"
 #include "../../include/mem.h"
-unsigned long pMemStart;
+
 unsigned long pMemSize;
 
 void memTest(unsigned long start, unsigned long grainSize){
