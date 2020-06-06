@@ -152,7 +152,7 @@ void startShell(void){
 
           tmpCmd = findCmd(argv[0]);
           if (tmpCmd)   
-               tmpCmd->func(argc, argv);
+               createTsk(tmpCmd->func(argc, argv)) ;
           else
                myPrintf(0x7,"UNKOWN command: %s\n",argv[0]);
      }
