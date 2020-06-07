@@ -1,6 +1,7 @@
 #include "../include/task.h"
 #include "../include/myPrintk.h"
 #include "../include/mem.h"
+#include "../include/vga.h"
 void schedule(void);
 void destroyTsk(int takIndex);
 
@@ -201,6 +202,7 @@ void TaskManagerInit(void)
      createTsk(initTskBody);
 
      // 切入多任务状态
+     clear_screen();
      myPrintk(0x2, "START MULTITASKING......\n");
      startMultitask();
      myPrintk(0x2, "STOP MULTITASKING......ShutDown\n");

@@ -10,7 +10,7 @@ void startShell(void);
 // init task 入口
 void myMain(void)
 {
-     clear_screen();
+     //clear_screen();
      createTsk(myTsk0);
      createTsk(myTsk1);
      createTsk(myTsk2);
