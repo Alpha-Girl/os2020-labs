@@ -18,7 +18,7 @@ typedef struct rdyQueueFCFS
 } rdyQueueFCFS;
 
 rdyQueueFCFS rqFCFS;
-
+//队列初始化
 void rqFCFSInit(myTCB *idleTsk)
 {
      rqFCFS.head = (void *)0;
@@ -30,7 +30,7 @@ int rqFCFSIsEmpty(void)
 {
      return ((rqFCFS.head == (void *)0) && (rqFCFS.tail == (void *)0));
 }
-
+//下一任务
 myTCB *nextFCFSTsk(void)
 {
      if (rqFCFSIsEmpty())
@@ -40,6 +40,7 @@ myTCB *nextFCFSTsk(void)
 }
 
 /* tskEnqueueFCFS: insert into the tail node */
+//任务入队
 void tskEnqueueFCFS(myTCB *tsk)
 {
      if (rqFCFSIsEmpty())
@@ -50,6 +51,7 @@ void tskEnqueueFCFS(myTCB *tsk)
 }
 
 /* tskDequeueFCFS: delete the first node */
+//任务出队
 void tskDequeueFCFS(myTCB *tsk)
 {
      rqFCFS.head = rqFCFS.head->next;
@@ -76,16 +78,13 @@ void stack_init(unsigned long **stk, void (*task)(void))
      *(*stk) = (unsigned long)0x77777777;
 }
 
-/**
- * 必须实现的外部接口
- */
+// 任务启动
 void tskStart(myTCB *tsk)
 {
-
      tsk->state = TSK_RDY;
      tskEnqueueFCFS(tsk);
 }
-
+// 任务结束
 void tskEnd(void)
 {
      tskDequeueFCFS(currentTsk);
@@ -97,13 +96,18 @@ void tskEnd(void)
  * tskBody():
  * return value: taskIndex or, if failed, -1
  */
+//生成任务
 int createTsk(void (*tskBody)(void))
 {
      myTCB *allocted = firstFreeTsk;
+     //分配TCB失败，返回-1
      if (allocted == 0)
           return -1;
+     //初始化栈
      stack_init(&(firstFreeTsk->stkTop), tskBody);
+     //下一空TCB的修改
      firstFreeTsk = firstFreeTsk->next;
+     //任务启动
      tskStart(allocted);
      return allocted->tcbIndex;
 }
@@ -114,7 +118,9 @@ int createTsk(void (*tskBody)(void))
  */
 void destroyTsk(int tskIndex)
 {
+     //将销毁的任务链接到空任务的链表上
      tcbPool[tskIndex].next = firstFreeTsk;
+     //修改链表头
      firstFreeTsk = &tcbPool[tskIndex];
 }
 
@@ -122,6 +128,7 @@ unsigned long **prevTSK_StackPtr;
 unsigned long *nextTSK_StackPtr;
 void context_switch(myTCB *prevTsk, myTCB *nextTsk)
 {
+     //上下文切换
      prevTSK_StackPtr = &(prevTsk->stkTop);
      nextTSK_StackPtr = nextTsk->stkTop;
      CTX_SW(prevTSK_StackPtr, nextTSK_StackPtr);
@@ -129,6 +136,7 @@ void context_switch(myTCB *prevTsk, myTCB *nextTsk)
 
 void scheduleFCFS(void)
 {
+     //FCFS调度
      myTCB *pretsk;
      pretsk = currentTsk;
      currentTsk = nextFCFSTsk();
