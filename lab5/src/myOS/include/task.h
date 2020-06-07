@@ -13,6 +13,7 @@ void initTskBody(void);
 #define STACK_SIZE 4096
 void CTX_SW(void*prev_stkTop, void*next_stkTop);
 int createTsk(void (*tskBody)(void));
+void destroyTsk(int tskIndex);
 void tskEnd(void);
 typedef struct myTCB {
      unsigned long *stkTop;     /* 栈顶指针 */
