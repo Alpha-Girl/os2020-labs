@@ -16,12 +16,12 @@ void tick(void){
 	int temp_col, temp_row;	
 	tick_number++;	
 	//myPrintk(0x4,"tick::%d\n",tick_number);
-
+	tick_hook_arr(); 
 	oneTickUpdateWallClock();
 
 	// call hooks 
-	scheduler_tick();  // RR
-	tick_hook_arr();  // arriving	
+	//scheduler_tick();  // RR
+	 // arriving	
 
 	if(watchdogTimer_func) watchdogTimer_func(); 
 

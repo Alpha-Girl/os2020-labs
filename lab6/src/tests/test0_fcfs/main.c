@@ -15,9 +15,8 @@ void wallClock_hook_main(void){
 // should be named as scheduler_hook_main
 // Be executed very early
 void scheduler_hook_main(void){
-//prior settings
+	//prior settings
 	setSysScheduler(SCHEDULER_FCFS);
-//改变上面的参数来设置使用哪个调度算法
 }
 
 void doSomeTestBefore(void){		
@@ -63,22 +62,21 @@ void testSchedulerFCFS(void){  //FCFS or RR or SJF or PRIORITY0
 		myPrintf(0x3,"NEED scheduler: SCHEDULER_FCFS!!!!!!STOPED!!!!!!!!");
 		return;
 	}
-	//确认调度算法 如果不使用的FCFS 需要改变if条件
+	
 	for(i=0;i<4;i++) initTskPara(&tskParas[i]);
-	//创建task 并且根据调度算法 设置task的参数 比如FCFS需要设置到达时间
 
-	setTskPara(ARRTIME,50,&tskParas[0]);
+	//setTskPara(ARRTIME,50,&tskParas[0]);
 	createTsk(myTSK0,&tskParas[0]);
 
-	setTskPara(ARRTIME,100,&tskParas[1]);
+	//setTskPara(ARRTIME,100,&tskParas[1]);
 	createTsk(myTSK1,&tskParas[1]);
 
-	setTskPara(ARRTIME,0,&tskParas[2]);
+	//setTskPara(ARRTIME,0,&tskParas[2]);
 	createTsk(myTSK2,&tskParas[2]);
 
 	initShell();
     memTestCaseInit();
-	setTskPara(ARRTIME,120,&tskParas[3]);
+	//setTskPara(ARRTIME,120,&tskParas[3]);
 	createTsk(startShell,&tskParas[3]);  //    startShell();
 }
 

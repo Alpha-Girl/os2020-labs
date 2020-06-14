@@ -53,3 +53,41 @@ struct scheduler scheduler_FCFS = {
     .tick_hook = NULL
 };
 
+struct scheduler scheduler_FMQ = {
+    .type = SCHEDULER_FCFS,
+    .nextTsk_func = nextFIFOTsk,
+    .enqueueTsk_func = tskEnqueueFIFO,
+    .dequeueTsk_func = tskDequeueFIFO,
+    .schedulerInit_func = schedulerInit_FCFS,
+	.createTsk_hook = NULL,
+    .tick_hook = NULL
+};
+
+struct scheduler scheduler_SJF = {
+    .type = SCHEDULER_FCFS,
+    .nextTsk_func = nextFIFOTsk,
+    .enqueueTsk_func = tskEnqueueFIFO,
+    .dequeueTsk_func = tskDequeueFIFO,
+    .schedulerInit_func = schedulerInit_FCFS,
+	.createTsk_hook = NULL,
+    .tick_hook = NULL
+};
+struct scheduler scheduler_RR = {
+    .type = SCHEDULER_FCFS,
+    .nextTsk_func = nextFIFOTsk,
+    .enqueueTsk_func = tskEnqueueFIFO,
+    .dequeueTsk_func = tskDequeueFIFO,
+    .schedulerInit_func = schedulerInit_FCFS,
+	.createTsk_hook = NULL,
+    .tick_hook = NULL
+};
+
+struct scheduler scheduler_MQ = {
+    .type = SCHEDULER_FCFS,
+    .nextTsk_func = nextFIFOTsk,
+    .enqueueTsk_func = tskEnqueueFIFO,
+    .dequeueTsk_func = tskDequeueFIFO,
+    .schedulerInit_func = schedulerInit_FCFS,
+	.createTsk_hook = NULL,
+    .tick_hook = NULL
+};

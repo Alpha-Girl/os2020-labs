@@ -15,6 +15,7 @@ void CTX_SW(void*prev_stkTop, void*next_stkTop);
 
 int createTsk(void (*tskBody)(void), tskPara *para);
 void tskEnd(void);
-
+void tskStart(myTCB *tsk);
+myTCB * firstFreeTsk;
 void TaskManagerInit(void);
 #endif

@@ -4,7 +4,7 @@
 #include "../../userApp/userApp.h"
 #include "taskPara.h"
 #include "dLinkList.h"
-
+#define TSK_RUN 1
 #define NULL (void*)0
 
 #define STACK_SIZE	512  // 1024*4
