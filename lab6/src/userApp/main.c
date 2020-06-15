@@ -16,7 +16,7 @@ void wallClock_hook_main(void){
 // Be executed very early
 void scheduler_hook_main(void){
 	//prior settings
-	setSysScheduler(SCHEDULER_PRIORITY);
+	setSysScheduler(SCHEDULER_PRIORITY0);
 }
 
 void doSomeTestBefore(void){
@@ -54,23 +54,23 @@ void myTSK2(void){
 	tskEnd();   //the task is end
 }
 
-void testSchedulerPRIO(void){  //FCFS or RR or SJF or PRIORITY0
+void testSchedulerPRIO0(void){  //FCFS or RR or SJF or PRIORITY0
 	tskPara tskParas[4];
 	int i;
 
-	if(getSysScheduler()!=SCHEDULER_PRIORITY) {
+	if(getSysScheduler()!=SCHEDULER_PRIORITY0) {
 		myPrintf(0x3,"NEED scheduler: SCHEDULER_PRIORITY0!!!!!!STOPED!!!!!!!!");
 		return;
 	}
 
 	for(i=0;i<4;i++) initTskPara(&tskParas[i]);
 
-	setTskPara(ARRTIME,50,&tskParas[0]);
+	setTskPara(ARRTIME,100,&tskParas[0]);
 	setTskPara(PRIORITY,1,&tskParas[0]);
 	createTsk(myTSK0,&tskParas[0]);
 
 	setTskPara(ARRTIME,100,&tskParas[1]);
-	setTskPara(PRIORITY,1,&tskParas[1]);
+	setTskPara(PRIORITY,0,&tskParas[1]);
 	createTsk(myTSK1,&tskParas[1]);
 
 	setTskPara(ARRTIME,0,&tskParas[2]);
@@ -78,9 +78,9 @@ void testSchedulerPRIO(void){  //FCFS or RR or SJF or PRIORITY0
 	createTsk(myTSK2,&tskParas[2]);
 	initShell();
     memTestCaseInit();
-	setTskPara(ARRTIME,0,&tskParas[3]);
+	setTskPara(ARRTIME,150,&tskParas[3]);
 	setTskPara(PRIORITY,4,&tskParas[3]);
-	//createTsk(startShell,&tskParas[3]); //    startShell();
+	createTsk(startShell,&tskParas[3]); //    startShell();
 }
 
 void myMain(void){    //main is our init task
@@ -89,7 +89,7 @@ void myMain(void){    //main is our init task
     doSomeTestBefore();
 
 	myPrintf(0x7,"********INIT START\n\n");
-	testSchedulerPRIO();
+	testSchedulerPRIO0();
  	myPrintf(0x7,"********INIT END\n\n");
 
     tskEnd();  // init end
