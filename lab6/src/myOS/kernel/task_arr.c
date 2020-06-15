@@ -42,25 +42,37 @@ void initArrList(void)
 /* arrTime: small --> big */
 void ArrListEnqueue(myTCB *tsk)
 {
-    //本函数需要实现！！！
-    //根据tsk新建一个节点 按照arrTime小到大的顺序插入到链表的对应位置
-    //同时arrPool也要有tsk
+
     arrNode *p, *tmp;
     p = tcb2Arr(tsk);
     p->theTCB = tsk;
     p->arrTime = tsk->para.arrTime;
     tmp = (arrNode *)dLinkListFirstNode(&arrList);
     if (dLinkListIsEmpty(&arrList))
+        //队列为空的情形
         dLinkInsertBefore(&arrList, &(tmp->theNode), &(p->theNode));
     else
     {
+        //队列不空时，先找到应插入的位置
         while (tmp->theNode.next != &arrList)
         {
             if (tmp->arrTime > p->arrTime)
                 break;
             tmp = (arrNode *)(tmp->theNode.next);
         }
-        dLinkInsertBefore(&arrList, &(tmp->theNode), &(p->theNode));
+        //根据arrtime判断插在查询结束时的节点前/后
+        if (tmp->arrTime <= p->arrTime)
+            //当arrtime相同且策略为PRIO时，插入顺序还与priority有关
+            if (tmp->arrTime == p->arrTime && p->theTCB->para.schedPolicy == SCHED_PRIO)
+            {
+                while (tmp->theTCB->para.priority > p->theTCB->para.priority && tmp->arrTime == p->arrTime)
+                    tmp = (arrNode *)(tmp->theNode.prev);
+                dLinkInsertAfter(&arrList, &(tmp->theNode), &(p->theNode));
+            }
+            else
+                dLinkInsertAfter(&arrList, &(tmp->theNode), &(p->theNode));
+        else
+            dLinkInsertBefore(&arrList, &(tmp->theNode), &(p->theNode));
     }
 }
 
@@ -72,19 +84,14 @@ void tskStartDelayed(myTCB *tsk)
 void tick_hook_arr(void)
 {
     if (dLinkListIsEmpty(&arrList))
-    { //myPrintk(0x2,"empty\n");
         return;
-    }
     else
     {
         arrNode *tmp = (arrNode *)dLinkListFirstNode(&arrList);
-        //myPrintk(0x2,"%d %d\n",tmp->arrTime,getTick());
         while (tmp->arrTime + arrTimeBase <= getTick())
         {
             dLinkDeleteFifo(&arrList);
-
             tskStart(tmp->theTCB);
-
             if (dLinkListIsEmpty(&arrList))
                 break;
             tmp = (arrNode *)dLinkListFirstNode(&arrList);
