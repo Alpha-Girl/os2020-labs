@@ -21,17 +21,18 @@ myTCB *nextPRIOTsk(void)
  */
 void tskEnqueuePRIO(myTCB *tsk)
 {
+    //根据优先级插入任务队列
     myTCB *point;
     point = rqPRIO;
     if (point == NULL)
-    {
+        //空队列的处理
         dLinkInsertBefore((dLinkedList *)point, (dLink_node *)point, (dLink_node *)tsk);
-    }
     else
     {
+        //找到应插入的节点
         while (tsk->para.priority > point->para.priority && point->next != 0)
             point = point->next;
-        if (tsk->para.priority > point->para.priority)
+        if (tsk->para.priority >= point->para.priority)
             dLinkInsertAfter((dLinkedList *)point, (dLink_node *)point, (dLink_node *)tsk);
         else
             dLinkInsertBefore((dLinkedList *)point, (dLink_node *)point, (dLink_node *)tsk);
